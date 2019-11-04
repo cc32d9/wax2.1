@@ -17,12 +17,12 @@ if [[ ! -z "$(pgrep mongod)" ]]; then
     $(pgrep mongod | xargs kill -9) || :
 fi
 # do not start mongod if it does not exist
-if [[ -x $(command -v mongod) ]]; then
-    echo "+++ $([[ "$BUILDKITE" == 'true' ]] && echo ':leaves: ')Starting new MongoDB"
-    [[ ! -d ~/data/mongodb && ! -d mongodata ]] && mkdir mongodata
-    echo "$ mongod --fork --logpath $(pwd)/mongod.log $([[ -d ~/data/mongodb ]] && echo '--dbpath ~/data/mongodb' || echo "--dbpath $(pwd)/mongodata") $([[ -f ~/etc/mongod.conf ]] && echo '-f ~/etc/mongod.conf')"
-    eval mongod --fork --logpath $(pwd)/mongod.log $([[ -d ~/data/mongodb ]] && echo '--dbpath ~/data/mongodb' || echo "--dbpath $(pwd)/mongodata") $([[ -f ~/etc/mongod.conf ]] && echo '-f ~/etc/mongod.conf')
-fi
+# if [[ -x $(command -v mongod) ]]; then
+#     echo "+++ $([[ "$BUILDKITE" == 'true' ]] && echo ':leaves: ')Starting new MongoDB"
+#     [[ ! -d ~/data/mongodb && ! -d mongodata ]] && mkdir mongodata
+#     echo "$ mongod --fork --logpath $(pwd)/mongod.log $([[ -d ~/data/mongodb ]] && echo '--dbpath ~/data/mongodb' || echo "--dbpath $(pwd)/mongodata") $([[ -f ~/etc/mongod.conf ]] && echo '-f ~/etc/mongod.conf')"
+#     eval mongod --fork --logpath $(pwd)/mongod.log $([[ -d ~/data/mongodb ]] && echo '--dbpath ~/data/mongodb' || echo "--dbpath $(pwd)/mongodata") $([[ -f ~/etc/mongod.conf ]] && echo '-f ~/etc/mongod.conf')
+# fi
 # tests
 if [[ -z "$TEST" ]]; then # run all serial tests
     # count tests
