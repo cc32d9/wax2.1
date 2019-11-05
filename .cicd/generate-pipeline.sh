@@ -403,8 +403,8 @@ EOF
     fi
 done
 # trigger eosio-lrt post pr
-if [[ -z $BUILDKITE_TRIGGERED_FROM_BUILD_ID && $TRIGGER_JOB == "true" ]]; then
-    if ( [[ ! $PINNED == false || $UNPINNED == true ]] ); then
+# if [[ -z $BUILDKITE_TRIGGERED_FROM_BUILD_ID && $TRIGGER_JOB == "true" ]]; then
+#     if ( [[ ! $PINNED == false || $UNPINNED == true ]] ); then
     cat <<EOF
   - label: ":pipeline: Trigger Long Running Tests"
     trigger: "eosio-lrt"
@@ -423,8 +423,8 @@ if [[ -z $BUILDKITE_TRIGGERED_FROM_BUILD_ID && $TRIGGER_JOB == "true" ]]; then
         UNPINNED: "${UNPINNED}"
 
 EOF
-    fi
-fi
+#     fi
+# fi
 # trigger multiversion post pr
 if [[ -z $BUILDKITE_TRIGGERED_FROM_BUILD_ID && $TRIGGER_JOB = "true" ]]; then
     if ( [[ ! $PINNED == false || $UNPINNED == true ]] ); then
