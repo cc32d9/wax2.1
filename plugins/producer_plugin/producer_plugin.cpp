@@ -9,7 +9,6 @@
 
 #include <fc/io/json.hpp>
 #include <fc/log/logger_config.hpp>
-#include <fc/smart_ref_impl.hpp>
 #include <fc/scoped_exit.hpp>
 
 #include <boost/asio.hpp>
@@ -37,7 +36,6 @@ using boost::multi_index_container;
 
 using std::string;
 using std::vector;
-using std::deque;
 using boost::signals2::scoped_connection;
 
 #undef FC_LOG_AND_DROP
@@ -1596,12 +1594,14 @@ bool producer_plugin_impl::process_unapplied_trxs( const fc::time_point& deadlin
                } else {
                   // this failed our configured maximum transaction time, we don't want to replay it
                   ++num_failed;
+                  if( itr->next ) itr->next( trace );
                   itr = _unapplied_transactions.erase( itr );
                   continue;
                }
             } else {
                ++num_applied;
                if( itr->trx_type != trx_enum_type::persisted ) {
+                  if( itr->next ) itr->next( trace );
                   itr = _unapplied_transactions.erase( itr );
                   continue;
                }
