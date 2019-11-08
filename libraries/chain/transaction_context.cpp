@@ -234,8 +234,8 @@ namespace eosio { namespace chain {
          validate_referenced_accounts( trx, enforce_whiteblacklist && control.is_producing_block() );
       }
       init( initial_net_usage);
-      if (!skip_recording)
-         record_transaction( id, trx.expiration ); /// checks for dupes
+//      if (!skip_recording)
+//         record_transaction( id, trx.expiration ); /// checks for dupes
    }
 
    void transaction_context::init_for_deferred_trx( fc::time_point p )
