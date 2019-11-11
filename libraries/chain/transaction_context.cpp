@@ -18,6 +18,42 @@
 #pragma pop_macro("N")
 
 #include <chrono>
+namespace {
+class code_timer {
+public:
+   explicit code_timer( std::string msg, size_t period = 1 )
+         : period_mod( period ), log_msg( std::move( msg ) ) {}
+
+   void start() {
+      begin = fc::time_point::now();
+   }
+
+   void stop() {
+      fc::microseconds t = fc::time_point::now() - begin;
+      total += t;
+      if( t > max ) max = t;
+      if( t > tmax ) tmax = t;
+      if( t < min ) min = t;
+      if( ++count % period_mod == 0 ) {
+         elog( "${s}: avg: ${avg}us, min: ${min}us, max: ${max}us, tmax: ${tmax}us, count: ${c}",
+               ("s", log_msg)("avg", total.count()/period_mod)("min", min)("max", max)("tmax", tmax)("c", count) );
+         total = fc::microseconds();
+         min = fc::microseconds::maximum();
+         max = fc::microseconds();
+      }
+   }
+
+private:
+   size_t           count = 0;
+   size_t           period_mod = 0;
+   std::string      log_msg;
+   fc::time_point   begin;
+   fc::microseconds total;
+   fc::microseconds min = fc::microseconds::maximum();
+   fc::microseconds max;
+   fc::microseconds tmax;
+};
+}
 
 namespace eosio { namespace chain {
 
@@ -263,17 +299,23 @@ namespace eosio { namespace chain {
          }
       }
 
+      static code_timer ct_s("schedule_action", 10020);
+      ct_s.start();
       if( delay == fc::microseconds() ) {
          for( const auto& act : trx.actions ) {
             schedule_action( act, act.account, false, 0, 0 );
          }
       }
+      ct_s.stop();
 
+      static code_timer ct_e("execute_action", 10021);
+      ct_e.start();
       auto& action_traces = trace->action_traces;
       uint32_t num_original_actions_to_execute = action_traces.size();
       for( uint32_t i = 1; i <= num_original_actions_to_execute; ++i ) {
          execute_action( i, 0 );
       }
+      ct_e.stop();
 
       if( delay != fc::microseconds() ) {
          schedule_transaction();
