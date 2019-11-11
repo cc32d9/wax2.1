@@ -32,6 +32,43 @@
 #include <fc/scoped_exit.hpp>
 #include <fc/variant_object.hpp>
 
+namespace {
+class code_timer {
+public:
+   explicit code_timer( std::string msg, size_t period = 1 )
+         : period_mod( period ), log_msg( std::move( msg ) ) {}
+
+   void start() {
+      begin = fc::time_point::now();
+   }
+
+   void stop() {
+      fc::microseconds t = fc::time_point::now() - begin;
+      total += t;
+      if( t > max ) max = t;
+      if( t > tmax ) tmax = t;
+      if( t < min ) min = t;
+      if( ++count % period_mod == 0 ) {
+         elog( "${s}: avg: ${avg}us, min: ${min}us, max: ${max}us, tmax: ${tmax}us, count: ${c}",
+               ("s", log_msg)("avg", total.count()/period_mod)("min", min)("max", max)("tmax", tmax)("c", count) );
+         total = fc::microseconds();
+         min = fc::microseconds::maximum();
+         max = fc::microseconds();
+      }
+   }
+
+private:
+   size_t           count = 0;
+   size_t           period_mod = 0;
+   std::string      log_msg;
+   fc::time_point   begin;
+   fc::microseconds total;
+   fc::microseconds min = fc::microseconds::maximum();
+   fc::microseconds max;
+   fc::microseconds tmax;
+};
+}
+
 namespace eosio { namespace chain {
 
 using resource_limits::resource_limits_manager;
@@ -1389,6 +1426,9 @@ struct controller_impl {
                                            uint32_t billed_cpu_time_us,
                                            bool explicit_billed_cpu_time = false )
    {
+      static code_timer ct_all("push_transaction", 10001);
+      ct_all.start();
+
       EOS_ASSERT(deadline != fc::time_point(), transaction_exception, "deadline cannot be uninitialized");
 
       transaction_trace_ptr trace;
@@ -1409,7 +1449,10 @@ struct controller_impl {
 
          const signed_transaction& trn = trx->packed_trx()->get_signed_transaction();
          transaction_checktime_timer trx_timer(timer);
+         static code_timer ct("trx_context", 10002);
+         ct.start();
          transaction_context trx_context(self, trn, trx->id(), std::move(trx_timer), start);
+         ct.stop();
          if ((bool)subjective_cpu_leeway && pending->_block_status == controller::block_status::incomplete) {
             trx_context.leeway = *subjective_cpu_leeway;
          }
@@ -1423,14 +1466,19 @@ struct controller_impl {
                trx_context.enforce_whiteblacklist = false;
             } else {
                bool skip_recording = replay_head_time && (time_point(trn.expiration) <= *replay_head_time);
+               static code_timer t("init_for_input_trx", 10003);
+               t.start();
                trx_context.init_for_input_trx( trx->packed_trx()->get_unprunable_size(),
                                                trx->packed_trx()->get_prunable_size(),
                                                skip_recording);
+               t.stop();
             }
 
             trx_context.delay = fc::seconds(trn.delay_sec);
 
             if( check_auth ) {
+               static code_timer t("check auth", 10004);
+               t.start();
                authorization.check_authorization(
                        trn.actions,
                        trx->recovered_keys(),
@@ -1439,18 +1487,31 @@ struct controller_impl {
                        [&trx_context](){ trx_context.checktime(); },
                        false
                );
+               t.stop();
             }
+            static code_timer ct_exec("trx_context.exec()", 10009);
+
+            ct_exec.start();
             trx_context.exec();
+            ct_exec.stop();
+            static code_timer ct_final("trx_context.finalize()", 10008);
+            ct_final.start();
             trx_context.finalize(); // Automatically rounds up network and CPU usage in trace and bills payers if successful
+            ct_final.stop();
 
             auto restore = make_block_restore_point();
 
+            static code_timer ct_receipt("receipt", 10015);
+            ct_receipt.start();
             if (!trx->implicit) {
                transaction_receipt::status_enum s = (trx_context.delay == fc::seconds(0))
                                                     ? transaction_receipt::executed
                                                     : transaction_receipt::delayed;
                trace->receipt = push_receipt(*trx->packed_trx(), s, trx_context.billed_cpu_time_us, trace->net_usage);
+               static code_timer ct_add("emplace trx", 10016);
+               ct_add.start();
                pending->_block_stage.get<building_block>()._pending_trx_metas.emplace_back(trx);
+               ct_add.stop();
             } else {
                transaction_receipt_header r;
                r.status = transaction_receipt::executed;
@@ -1458,6 +1519,7 @@ struct controller_impl {
                r.net_usage_words = trace->net_usage / 8;
                trace->receipt = r;
             }
+            ct_receipt.stop();
 
             fc::move_append( pending->_block_stage.get<building_block>()._action_receipt_digests,
                              std::move(trx_context.executed_action_receipt_digests) );
@@ -1471,6 +1533,8 @@ struct controller_impl {
             emit(self.applied_transaction, std::tie(trace, trn));
 
 
+            static code_timer ct2("squash", 10005);
+            ct2.start();
             if ( read_mode != db_read_mode::SPECULATIVE && pending->_block_status == controller::block_status::incomplete ) {
                //this may happen automatically in destructor, but I prefere make it more explicit
                trx_context.undo();
@@ -1478,7 +1542,9 @@ struct controller_impl {
                restore.cancel();
                trx_context.squash();
             }
+            ct2.stop();
 
+            ct_all.stop();
             return trace;
          } catch( const disallowed_transaction_extensions_bad_block_exception& ) {
             throw;
@@ -1493,6 +1559,7 @@ struct controller_impl {
          emit( self.accepted_transaction, trx );
          emit( self.applied_transaction, std::tie(trace, trn) );
 
+         ct_all.stop();
          return trace;
       } FC_CAPTURE_AND_RETHROW((trace))
    } /// push_transaction
