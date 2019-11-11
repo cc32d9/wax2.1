@@ -612,8 +612,14 @@ namespace eosio { namespace chain {
    }
 
    void transaction_context::execute_action( uint32_t action_ordinal, uint32_t recurse_depth ) {
+      static code_timer ct_s("apply_context", 10030);
+      ct_s.start();
       apply_context acontext( control, *this, action_ordinal, recurse_depth );
+      ct_s.stop();
+      static code_timer ct("acontext.exec()", 10031);
+      ct.start();
       acontext.exec();
+      ct.stop();
    }
 
 
