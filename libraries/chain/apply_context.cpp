@@ -90,22 +90,13 @@ void apply_context::exec_one()
 {
    auto start = fc::time_point::now();
 
-   static code_timer ct("get_global_prop", 10049);
-   ct.start();
    const auto& cfg = control.get_global_properties().configuration;
-   ct.stop();
    const account_metadata_object* receiver_account = nullptr;
    try {
       try {
-         static code_timer ct("get account", 10048);
-         ct.start();
          receiver_account = &db.get<account_metadata_object,by_name>( receiver );
-         ct.stop();
          privileged = receiver_account->is_privileged();
-         static code_timer cf("find apply handler", 10047);
-         cf.start();
          auto native = control.find_apply_handler( receiver, act->account, act->name );
-         cf.stop();
          if( native ) {
             if( trx_context.enforce_whiteblacklist && control.is_producing_block() ) {
                control.check_contract_list( receiver );
@@ -130,8 +121,6 @@ void apply_context::exec_one()
             } catch( const wasm_exit& ) {}
          }
 
-         static code_timer ci("is_builtin", 10046);
-         ci.start();
          if( !privileged && control.is_builtin_activated( builtin_protocol_feature_t::ram_restrictions ) ) {
             const size_t checktime_interval = 10;
             size_t counter = 0;
@@ -154,7 +143,6 @@ void apply_context::exec_one()
                }
             }
          }
-         ci.stop();
       } FC_RETHROW_EXCEPTIONS( warn, "pending console output: ${console}", ("console", _pending_console_output) )
    } catch( const fc::exception& e ) {
       action_trace& trace = trx_context.get_action_trace( action_ordinal );
@@ -169,12 +157,21 @@ void apply_context::exec_one()
    //    * a pointer to an object in a chainbase index is not invalidated if the fields of that object are modified;
    //    * and, the *receiver_account object itself cannot be removed because accounts cannot be deleted in EOSIO.
 
+   static code_timer ct("new action_trace", 10049);
+   ct.start();
    action_trace& trace = trx_context.get_action_trace( action_ordinal );
    trace.receipt.emplace();
+   ct.stop();
    action_receipt& r = *trace.receipt;
    r.receiver         = receiver;
-   r.act_digest       = digest_type::hash(*act);
 
+   static code_timer ct_h("hash", 10048);
+   ct_h.start();
+   r.act_digest       = digest_type::hash(*act);
+   ct_h.stop();
+
+   static code_timer ct_n("next", 10047);
+   ct_n.start();
    r.global_sequence  = next_global_sequence();
    r.recv_sequence    = next_recv_sequence( *receiver_account );
 
@@ -191,10 +188,14 @@ void apply_context::exec_one()
    for( const auto& auth : act->authorization ) {
       r.auth_sequence[auth.actor] = next_auth_sequence( auth.actor );
    }
+   ct_n.stop();
 
    trx_context.executed_action_receipt_digests.emplace_back( r.digest() );
 
+   static code_timer ct_f("finalize", 10046);
+   ct_f.start();
    finalize_trace( trace, start );
+   ct_f.stop();
 
    if ( control.contracts_console() ) {
       print_debug(receiver, trace);
@@ -206,8 +207,10 @@ void apply_context::finalize_trace( action_trace& trace, const fc::time_point& s
    trace.account_ram_deltas = std::move( _account_ram_deltas );
    _account_ram_deltas.clear();
 
-   trace.console = std::move( _pending_console_output );
-   _pending_console_output.clear();
+   if( !_pending_console_output.empty() ) {
+      trace.console = std::move( _pending_console_output );
+      _pending_console_output.clear();
+   }
 
    trace.elapsed = fc::time_point::now() - start;
 }
