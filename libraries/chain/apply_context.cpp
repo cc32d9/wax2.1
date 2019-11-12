@@ -88,6 +88,8 @@ apply_context::apply_context(controller& con, transaction_context& trx_ctx, uint
 
 void apply_context::exec_one()
 {
+   static code_timer ct_s("exec_one start", 10042);
+   ct_s.start();
    auto start = fc::time_point::now();
 
    const auto& cfg = control.get_global_properties().configuration;
@@ -151,6 +153,7 @@ void apply_context::exec_one()
       finalize_trace( trace, start );
       throw;
    }
+   ct_s.stop();
 
    // Note: It should not be possible for receiver_account to be invalidated because:
    //    * a pointer to an object in a chainbase index is not invalidated if other objects in that index are modified, removed, or added;
@@ -190,7 +193,10 @@ void apply_context::exec_one()
    }
    ct_n.stop();
 
+   static code_timer ct_d("digest", 10045);
+   ct_d.start();
    trx_context.executed_action_receipt_digests.emplace_back( r.digest() );
+   ct_d.stop();
 
    static code_timer ct_f("finalize", 10046);
    ct_f.start();
