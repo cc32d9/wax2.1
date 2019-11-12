@@ -90,13 +90,22 @@ void apply_context::exec_one()
 {
    auto start = fc::time_point::now();
 
+   static code_timer ct("get_global_prop", 10049);
+   ct.start();
    const auto& cfg = control.get_global_properties().configuration;
+   ct.stop();
    const account_metadata_object* receiver_account = nullptr;
    try {
       try {
+         static code_timer ct("get account", 10048);
+         ct.start();
          receiver_account = &db.get<account_metadata_object,by_name>( receiver );
+         ct.stop();
          privileged = receiver_account->is_privileged();
+         static code_timer cf("find apply handler", 10047);
+         cf.start();
          auto native = control.find_apply_handler( receiver, act->account, act->name );
+         cf.stop();
          if( native ) {
             if( trx_context.enforce_whiteblacklist && control.is_producing_block() ) {
                control.check_contract_list( receiver );
@@ -121,6 +130,8 @@ void apply_context::exec_one()
             } catch( const wasm_exit& ) {}
          }
 
+         static code_timer ci("is_builtin", 10046);
+         ci.start();
          if( !privileged && control.is_builtin_activated( builtin_protocol_feature_t::ram_restrictions ) ) {
             const size_t checktime_interval = 10;
             size_t counter = 0;
@@ -143,6 +154,7 @@ void apply_context::exec_one()
                }
             }
          }
+         ci.stop();
       } FC_RETHROW_EXCEPTIONS( warn, "pending console output: ${console}", ("console", _pending_console_output) )
    } catch( const fc::exception& e ) {
       action_trace& trace = trx_context.get_action_trace( action_ordinal );
