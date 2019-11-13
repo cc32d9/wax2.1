@@ -1436,6 +1436,8 @@ struct controller_impl {
       static code_timer ct_all("push_transaction", 10001);
       ct_all.start();
 
+      static code_timer ct_s("pt start", 10017);
+      ct_s.start();
       EOS_ASSERT(deadline != fc::time_point(), transaction_exception, "deadline cannot be uninitialized");
 
       transaction_trace_ptr trace;
@@ -1456,10 +1458,10 @@ struct controller_impl {
 
          const signed_transaction& trn = trx->packed_trx()->get_signed_transaction();
          transaction_checktime_timer trx_timer(timer);
+         ct_s.stop();
          static code_timer ct("trx_context", 10002);
          ct.start();
          transaction_context trx_context(self, trn, trx->id(), std::move(trx_timer), start);
-         ct.stop();
          if ((bool)subjective_cpu_leeway && pending->_block_status == controller::block_status::incomplete) {
             trx_context.leeway = *subjective_cpu_leeway;
          }
@@ -1467,6 +1469,7 @@ struct controller_impl {
          trx_context.explicit_billed_cpu_time = explicit_billed_cpu_time;
          trx_context.billed_cpu_time_us = billed_cpu_time_us;
          trace = trx_context.trace;
+         ct.stop();
          try {
             if( trx->implicit ) {
                trx_context.init_for_implicit_trx();
@@ -1497,7 +1500,6 @@ struct controller_impl {
                t.stop();
             }
             static code_timer ct_exec("trx_context.exec()", 10009);
-
             ct_exec.start();
             trx_context.exec();
             ct_exec.stop();
@@ -1506,10 +1508,10 @@ struct controller_impl {
             trx_context.finalize(); // Automatically rounds up network and CPU usage in trace and bills payers if successful
             ct_final.stop();
 
-            auto restore = make_block_restore_point();
-
             static code_timer ct_receipt("receipt", 10015);
             ct_receipt.start();
+            auto restore = make_block_restore_point();
+
             if (!trx->implicit) {
                transaction_receipt::status_enum s = (trx_context.delay == fc::seconds(0))
                                                     ? transaction_receipt::executed
@@ -1528,9 +1530,14 @@ struct controller_impl {
             }
             ct_receipt.stop();
 
+            static code_timer ct_ma("move_append", 10018);
+            ct_ma.start();
             fc::move_append( pending->_block_stage.get<building_block>()._action_receipt_digests,
                              std::move(trx_context.executed_action_receipt_digests) );
+            ct_ma.stop();
 
+            static code_timer ct_e("emit", 10019);
+            ct_e.start();
             // call the accept signal but only once for this transaction
             if (!trx->accepted) {
                trx->accepted = true;
@@ -1538,7 +1545,7 @@ struct controller_impl {
             }
 
             emit(self.applied_transaction, std::tie(trace, trn));
-
+            ct_e.stop();
 
             static code_timer ct2("squash", 10005);
             ct2.start();
