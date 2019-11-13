@@ -21,33 +21,40 @@ public:
          : period_mod( period ), log_msg( std::move( msg ) ) {}
 
    void start() {
-      begin = fc::time_point::now();
+      begin = now();
    }
 
    void stop() {
-      fc::microseconds t = fc::time_point::now() - begin;
+      int64_t t = now() - begin;
       total += t;
       if( t > max ) max = t;
       if( t > tmax ) tmax = t;
       if( t < min ) min = t;
       if( ++count % period_mod == 0 ) {
-         elog( "${s}: avg: ${avg}us, min: ${min}us, max: ${max}us, tmax: ${tmax}us, count: ${c}",
-               ("s", log_msg)("avg", total.count()/period_mod)("min", min)("max", max)("tmax", tmax)("c", count) );
-         total = fc::microseconds();
-         min = fc::microseconds::maximum();
-         max = fc::microseconds();
+         elog( "${s}: avg: ${avg}ns, min: ${min}ns, max: ${max}ns, tmax: ${tmax}ns, count: ${c}",
+               ("s", log_msg)("avg", total/period_mod)("min", min)("max", max)("tmax", tmax)("c", count) );
+         total = 0;
+         min = INT64_MAX;
+         max = 0;
       }
    }
+
+private:
+   int64_t now() {
+      namespace bch = boost::chrono;
+      return bch::duration_cast<bch::nanoseconds>( bch::high_resolution_clock::now().time_since_epoch() ).count();
+   }
+
 
 private:
    size_t           count = 0;
    size_t           period_mod = 0;
    std::string      log_msg;
-   fc::time_point   begin;
-   fc::microseconds total;
-   fc::microseconds min = fc::microseconds::maximum();
-   fc::microseconds max;
-   fc::microseconds tmax;
+   int64_t   begin = 0;
+   int64_t   total = 0;
+   int64_t   min   = INT64_MAX;
+   int64_t   max   = 0;
+   int64_t   tmax  = 0;
 };
 }
 
