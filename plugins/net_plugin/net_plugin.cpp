@@ -3072,7 +3072,7 @@ namespace eosio {
    void net_plugin_impl::on_accepted_block(const block_state_ptr& block) {
       fc_elog( logger, "on_accepted_block, blk num = ${num}", ("num", block->block_num) );
       update_chain_info();
-      dispatcher->strand.post( [this, block]() {
+      boost::asio::post( my_impl->thread_pool->get_executor(), [this, block]() {
          fc_elog( logger, "signaled, blk num = ${num}", ("num", block->block_num) );
          fc_dlog( logger, "signaled, blk num = ${num}, id = ${id}", ("num", block->block_num)("id", block->id) );
          dispatcher->bcast_block( block );
