@@ -29,6 +29,50 @@
 
 using namespace eosio::chain::plugin_interface;
 
+namespace {
+class code_timer {
+public:
+   explicit code_timer( std::string msg, size_t period = 1 )
+         : period_mod( period ), log_msg( std::move( msg ) ) {}
+
+   void start() {
+      begin = now();
+   }
+
+   void stop() {
+      int64_t t = now() - begin;
+      total += t;
+      if( t > max ) max = t;
+      if( t > tmax ) tmax = t;
+      if( t < min ) min = t;
+      if( ++count % period_mod == 0 ) {
+         elog( "${s}: avg: ${avg}ns, min: ${min}ns, max: ${max}ns, tmax: ${tmax}ns, count: ${c}",
+               ("s", log_msg)("avg", total/period_mod)("min", min)("max", max)("tmax", tmax)("c", count) );
+         total = 0;
+         min = INT64_MAX;
+         max = 0;
+      }
+   }
+
+private:
+   int64_t now() {
+      namespace bch = boost::chrono;
+      return bch::duration_cast<bch::nanoseconds>( bch::high_resolution_clock::now().time_since_epoch() ).count();
+   }
+
+
+private:
+   size_t           count = 0;
+   size_t           period_mod = 0;
+   std::string      log_msg;
+   int64_t   begin = 0;
+   int64_t   total = 0;
+   int64_t   min   = INT64_MAX;
+   int64_t   max   = 0;
+   int64_t   tmax  = 0;
+};
+}
+
 namespace eosio {
    static appbase::abstract_plugin& _net_plugin = app().register_plugin<net_plugin>();
 
@@ -1105,6 +1149,9 @@ namespace eosio {
                   c->close();
                   return;
                }
+               if( priority == priority::medium ) {
+                  fc_elog( logger, "done with async_write" );
+               }
                c->buffer_queue.clear_out_queue();
                c->enqueue_sync_block();
                c->do_queue_write( priority );
@@ -1887,8 +1934,10 @@ namespace eosio {
 
    // thread safe
    void dispatch_manager::bcast_block(const block_state_ptr& bs) {
-      fc_dlog( logger, "bcast block ${b}", ("b", bs->block_num) );
+      fc_elog( logger, "bcast block ${b}", ("b", bs->block_num) );
 
+      static code_timer ct_c("for_each_conn", 50);
+      ct_c.start();
       bool have_connection = false;
       for_each_block_connection( [&have_connection]( auto& cp ) {
          peer_dlog( cp, "socket_is_open ${s}, connecting ${c}, syncing ${ss}",
@@ -1900,10 +1949,16 @@ namespace eosio {
          have_connection = true;
          return false;
       } );
+      ct_c.stop();
 
       if( !have_connection ) return;
+      static code_timer ct_p("pack", 51);
+      ct_p.start();
       std::shared_ptr<std::vector<char>> send_buffer = create_send_buffer( bs->block );
+      ct_p.stop();
 
+      static code_timer ct_s("foreach strand", 52);
+      ct_s.start();
       for_each_block_connection( [this, bs, send_buffer]( auto& cp ) {
          if( !cp->current() ) {
             return true;
@@ -1917,12 +1972,13 @@ namespace eosio {
                if( !add_peer_block( bs->id, cp->connection_id ) ) {
                   return;
                }
-               fc_dlog( logger, "bcast block ${b} to ${p}", ("b", bnum)( "p", cp->peer_name() ) );
+               fc_elog( logger, "bcast block ${b} to ${p}", ("b", bnum)( "p", cp->peer_name() ) );
                cp->enqueue_buffer( send_buffer, true, priority::medium, no_reason );
             }
          });
          return true;
       } );
+      ct_s.stop();
    }
 
    void dispatch_manager::bcast_notice( const block_id_type& id ) {
@@ -3008,8 +3064,10 @@ namespace eosio {
 
    // called from application thread
    void net_plugin_impl::on_accepted_block(const block_state_ptr& block) {
+      fc_elog( logger, "on_accepted_block, blk num = ${num}", ("num", block->block_num) );
       update_chain_info();
       dispatcher->strand.post( [this, block]() {
+         fc_elog( logger, "signaled, blk num = ${num}", ("num", block->block_num) );
          fc_dlog( logger, "signaled, blk num = ${num}, id = ${id}", ("num", block->block_num)("id", block->id) );
          dispatcher->bcast_block( block );
       });
