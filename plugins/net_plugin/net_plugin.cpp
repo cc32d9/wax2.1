@@ -2421,9 +2421,9 @@ namespace eosio {
             block_header bh;
             fc::raw::unpack( peek_ds, bh );
 
+            uint32_t blk_num = bh.block_num();
             block_id_type blk_id = bh.id();
             if( my_impl->dispatcher->have_block( blk_id ) ) {
-               uint32_t blk_num = bh.block_num();
                fc_dlog( logger, "canceling wait on ${p}, already received block ${num}",
                         ("p", peer_name())("num", blk_num) );
                my_impl->sync_master->sync_recv_block( shared_from_this(), blk_id, blk_num );
@@ -2433,10 +2433,15 @@ namespace eosio {
                return true;
             }
 
+            fc_elog( logger, "received block ${num}", ("num", blk_num) );
+
+            static code_timer ct_p("unpack", 50);
+            ct_p.start();
             auto ds = pending_message_buffer.create_datastream();
             fc::raw::unpack( ds, which ); // throw away
             shared_ptr<signed_block> ptr = std::make_shared<signed_block>();
             fc::raw::unpack( ds, *ptr );
+            ct_p.stop();
             handle_message( blk_id, std::move( ptr ) );
 
          } else if( which == packed_transaction_which ) {
@@ -2863,8 +2868,9 @@ namespace eosio {
 
    // called from connection strand
    void connection::handle_message( const block_id_type& id, signed_block_ptr ptr ) {
-      peer_dlog( this, "received signed_block ${id}", ("id", ptr->block_num() ) );
+      peer_elog( this, "received signed_block ${id}", ("id", ptr->block_num() ) );
       app().post(priority::high, [ptr{std::move(ptr)}, id, c = shared_from_this()]() mutable {
+         fc_elog( logger, "app process block ${num}", ("num", ptr->block_num()) );
          c->process_signed_block( id, std::move( ptr ) );
       });
       my_impl->dispatcher->bcast_notice( id );
