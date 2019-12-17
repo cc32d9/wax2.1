@@ -2,17 +2,9 @@
 set -eo pipefail
 VERSION=1
 brew update
-brew install git cmake python@2 python libtool libusb graphviz automake wget gmp pkgconfig doxygen openssl@1.1 jq boost || :
-# install llvm 4 from source
-git clone --depth 1 --single-branch --branch release_40 https://github.com/llvm-mirror/llvm.git llvm
-cd llvm
-mkdir build
-cd build
-cmake -G 'Unix Makefiles' -DCMAKE_INSTALL_PREFIX='/usr/local' -DLLVM_TARGETS_TO_BUILD='host' -DLLVM_BUILD_TOOLS=false -DLLVM_ENABLE_RTTI=1 -DCMAKE_BUILD_TYPE=Release ..
-make -j $(getconf _NPROCESSORS_ONLN)
-sudo make install
-cd ../..
-rm -rf llvm
+brew install git cmake python@2 python libtool libusb graphviz automake wget gmp pkgconfig doxygen openssl@1.1 jq || :
+brew tap eosio/eosio && cd /usr/local/Homebrew/Library/Taps/eosio/homebrew-eosio && git pull origin more-brew-packages
+brew install eosio/eosio/boost@1.71 eosio/eosio/llvm@4
 # install mongoDB
 cd ~
 curl -OL https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-3.6.3.tgz
