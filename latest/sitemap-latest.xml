@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   <url>
-    <loc>https://eosio.github.io//eos/latest/index</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -11,17 +11,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/install/install-prebuilt-binaries</loc>
+    <loc>https://eosio.github.io//eos/latest</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://eosio.github.io//eos/latest/install/index</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/keosd/FAQ</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -36,17 +36,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/keosd/usage</loc>
+    <loc>https://eosio.github.io//eos/latest/keosd/troubleshooting</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -56,12 +56,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-buy-ram</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/transfer</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-connect-a-specific-network</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-config-a-multisig-account</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -81,12 +81,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-get-block-information</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-get-account-information</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-get-transaction-information</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-get-tables-information</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -106,7 +106,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-unlink-permission</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-undelegate-NET</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -116,7 +116,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-unstake-NET</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/how-to-guides/how-to-vote</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -131,12 +131,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/keosd/how-to-guides/index</loc>
+    <loc>https://eosio.github.io//eos/latest/keosd/plugins/http_plugin</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/keosd/plugins/http_plugin</loc>
+    <loc>https://eosio.github.io//eos/latest/keosd/how-to-guides</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -161,7 +161,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/replays/how-to-generate-a-snapshot</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/replays/how-to-generate-a-blocks.log</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -196,12 +196,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/usage/nodeos-options</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/convert/pack_action_data</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/convert/index</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/convert</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -211,22 +211,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/convert/unpack_action_data</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/convert/unpack_transaction</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/create/index</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/create/key</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/get/accounts</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/get/account</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -241,17 +231,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/get/currency-stats</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/get</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/get/block</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://eosio.github.io//eos/latest/cleos/command-reference/get/info</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/get</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -266,12 +256,22 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/get/transaction_id</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/create/account</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/multisig</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/create/key</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/create</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/multisig/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -281,7 +281,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/multisig/multisig-invalidate</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/multisig/multisig-propose</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -291,27 +291,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/multisig/multisig-review</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/push/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/net/disconnect</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/net</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/net/status</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/push</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/multisig/multisig-unapprove</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -321,12 +306,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/index</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-bidname</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-bidnameinfo</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -341,12 +326,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-listbw</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-delegatebw</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-newaccount</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-listproducers</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -381,7 +366,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-rex-mvfromsavings</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-rex-mvtosavings</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -396,12 +381,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-rex-updaterex</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-rex</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-rex</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/system/system-rex-unstaketorex</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -426,12 +411,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/version/client</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/net/disconnect</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/version</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/net/index</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/net/status</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -441,7 +431,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/set/set-account</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/net/peers</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -456,12 +446,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/version</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/wallet/create_key</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/wallet/create</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -471,12 +461,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/wallet/keys</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/wallet/import</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/wallet/lock</loc>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/wallet/list</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/wallet/lock_all</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -486,12 +481,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/cleos/command-reference/wallet/unlock</loc>
+    <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/install/build-from-source/shell-scripts/build-eosio-binaries</loc>
+    <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build/eosio-dependencies</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/install/build-from-source/shell-scripts/download-eosio-source</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -516,12 +516,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/chain_plugin/index</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/chain_api_plugin/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/chain_api_plugin/index</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/chain_plugin/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -546,7 +546,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/login_plugin/index</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/http_client_plugin/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -556,17 +556,27 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/http_client_plugin/index</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://eosio.github.io//eos/latest/nodeos/plugins/mongo_db_plugin/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/login_plugin/index</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://eosio.github.io//eos/latest/nodeos/plugins/net_api_plugin/index</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/producer_api_plugin/index</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/test_control_api_plugin/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -581,12 +591,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/producer_api_plugin/index</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/state_history_plugin/how-to-create-snapshot-with-full-history</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/state_history_plugin/how-to-create-snapshot-with-full-history</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/txn_test_gen_plugin</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -601,27 +611,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/test_control_api_plugin/index</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/txn_test_gen_plugin/index</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://eosio.github.io//eos/latest/nodeos/plugins/test_control_plugin/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/usage/development-environment/local-multi-node-testnet</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/usage/development-environment/local-single-node-testnet</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/usage/development-environment</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/usage/development-environment/index</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -636,6 +636,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/db_size_api_plugin/api-reference/index</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build/platforms/amazon_linux-2-pinned</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -646,17 +651,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build/platforms/index</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build/platforms/macos-10.14-pinned</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build/platforms</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build/platforms/ubuntu-18.04-pinned</loc>
+    <loc>https://eosio.github.io//eos/latest/install/build-from-source/manual-build/platforms/ubuntu-16.04-pinned</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -666,17 +671,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/db_size_api_plugin/api-reference</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/chain_api_plugin/api-reference</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/producer_api_plugin/api-reference</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/net_api_plugin/api-reference</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -686,7 +681,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/net_api_plugin/api-reference</loc>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/producer_api_plugin/api-reference</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://eosio.github.io//eos/latest/nodeos/plugins/chain_api_plugin/api-reference</loc>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
