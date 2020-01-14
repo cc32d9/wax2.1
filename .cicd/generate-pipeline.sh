@@ -135,7 +135,7 @@ EOF
             - 'registry_2'
           pre-execute-sleep: 10
           pre-commands: 
-            - "rm -rf mac-anka-fleet; git clone git@github.com:EOSIO/mac-anka-fleet.git && cd mac-anka-fleet && . ./ensure-tag.bash -u 12 -r 25G -a '-n'"
+            - "rm -rf mac-anka-fleet; git clone git@github.com:EOSIO/mac-anka-fleet.git -b master-push-lock-file && cd mac-anka-fleet && . ./ensure-tag.bash -u 12 -r 25G -a '-n'"
       - thedyrt/skip-checkout#v0.1.1:
           cd: ~
     env:
