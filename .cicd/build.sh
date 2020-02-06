@@ -3,7 +3,7 @@ set -eo pipefail
 . ./.cicd/helpers/general.sh
 mkdir -p $BUILD_DIR
 CMAKE_EXTRAS="-DCMAKE_BUILD_TYPE='Release' -DENABLE_MULTIVERSION_PROTOCOL_TEST=true"
-echo "Testing contracts CI."
+echo "Testing contracts CI v2."
 if [[ "$(uname)" == 'Darwin' ]]; then
     # You can't use chained commands in execute
     if [[ "$TRAVIS" == 'true' ]]; then
