@@ -779,7 +779,7 @@ cat <<EOF
             - 'registry_2'
       - EOSIO/skip-checkout#v0.1.1:
           cd: ~
-    agents: "queue=mac-anka-node-fleet"
+    agents: "queue=mac-anka-large-node-fleet"
     retry:
       manual:
         permit_on_passed: true
