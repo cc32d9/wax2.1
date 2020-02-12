@@ -762,7 +762,7 @@ cat <<EOF
   - label: ":darwin: macOS 10.14 - nodeos_forked_chain_lr_test"
     command:
       - "git clone $BUILDKITE_REPO eos && cd eos &&  git checkout -f $BUILDKITE_COMMIT && git submodule update --init --recursive"
-      - "cd eos && buildkite-agent artifact download build.tar.gz . --step ':darwin: macOS 10.14 - Build' --build $BUILDKITE_TRIGGERED_FROM_BUILD_ID && tar -xzf build.tar.gz"
+      - "cd eos && buildkite-agent artifact download build.tar.gz . --step ':darwin: macOS 10.14 - Build' --build $BUILDKITE_BUILD_ID && tar -xzf build.tar.gz"
       - "cd eos && ./.cicd/test.sh scripts/long-running-test.sh nodeos_forked_chain_lr_test"
     plugins:
       - EOSIO/anka#v0.6.0:
