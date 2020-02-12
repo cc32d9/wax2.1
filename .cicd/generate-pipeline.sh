@@ -739,7 +739,7 @@ cat <<EOF
           failover-registries:
             - 'registry_1'
             - 'registry_2'
-      - thedyrt/skip-checkout#v0.1.1:
+      - EOSIO/skip-checkout#v0.1.1:
           cd: ~
     agents: "queue=mac-anka-node-fleet"
     retry:
