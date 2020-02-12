@@ -740,6 +740,8 @@ cat <<EOF
             - 'registry_1'
             - 'registry_2'
           pre-execute-ping-sleep: "8.8.8.8"
+      - EOSIO/skip-checkout#v0.1.1:
+          cd: ~
     agents: "queue=mac-anka-node-fleet"
     retry:
       manual:
