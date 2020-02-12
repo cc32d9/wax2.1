@@ -719,50 +719,13 @@
 
 ### DEBUGGING NODEOS_FORKED_CHAIN_LR_TEST
 
-cat <<EOF
-  - label: ":darwin: macOS 10.14 - Build"
-    command:
-      - "git clone $BUILDKITE_REPO eos && cd eos &&  git checkout -f $BUILDKITE_COMMIT && git submodule update --init --recursive"
-      - "cd eos && ./.cicd/build.sh"
-      - "cd eos && tar -pczf build.tar.gz build && buildkite-agent artifact upload build.tar.gz"
-    plugins:
-      - EOSIO/anka#v0.6.0:
-          no-volume: true
-          inherit-environment-vars: true
-          vm-name: 10.14.6_6C_14G_40G
-          vm-registry-tag: "clean::cicd::git-ssh::nas::brew::buildkite-agent::eos-macos-10.14-pinned-9924df22e55b7798746d0de746d272f9edc5546d"
-          modify-cpu: 12
-          modify-ram: 24
-          always-pull: true
-          debug: true
-          wait-network: true
-          failover-registries:
-            - 'registry_1'
-            - 'registry_2'
-          pre-execute-ping-sleep: "8.8.8.8"
-          pre-commands: 
-            - "git clone git@github.com:EOSIO/mac-anka-fleet.git && cd mac-anka-fleet && . ./ensure-tag.bash -u 12 -r 25G -a '-n'"
-    env:
-      REPO: git@github.com:EOSIO/eos.git
-      REPO_COMMIT: 947fef533eed91872cc0d2af0a801b9985e923c0
-      TEMPLATE: 10.14.6_6C_14G_40G
-      TEMPLATE_TAG: clean::cicd::git-ssh::nas::brew::buildkite-agent
-      IMAGE_TAG: macos-10.14-pinned
-      PLATFORM_TYPE: pinned
-      TAG_COMMANDS: "git clone git@github.com:EOSIO/eos.git eos && cd eos &&  git checkout -f $BUILDKITE_COMMIT && git submodule update --init --recursive && export IMAGE_TAG=macos-10.14-pinned && export PLATFORM_TYPE=pinned && . ./.cicd/platforms/pinned/macos-10.14-pinned.sh && cd ~/eos && cd .. && rm -rf eos"
-      PROJECT_TAG: eos-macos-10.14-pinned-9924df22e55b7798746d0de746d272f9edc5546d
-    timeout: 180
-    agents: "queue=mac-anka-large-node-fleet"
-    skip: ${SKIP_MACOS_10_14}
-EOF
-
 echo '  - wait'
 
 cat <<EOF
   - label: ":darwin: macOS 10.14 - nodeos_forked_chain_lr_test"
     command:
       - "git clone $BUILDKITE_REPO eos && cd eos &&  git checkout -f $BUILDKITE_COMMIT && git submodule update --init --recursive"
-      - "cd eos && buildkite-agent artifact download build.tar.gz . --step ':darwin: macOS 10.14 - Build' --build $BUILDKITE_BUILD_ID && tar -xzf build.tar.gz"
+      - "cd eos && buildkite-agent artifact download build.tar.gz . --step ':darwin: macOS 10.14 - Build' --build bcebee17-d3f9-42f1-9216-a42aa721c970 && tar -xzf build.tar.gz"
       - "cd eos && ./.cicd/test.sh scripts/long-running-test.sh nodeos_forked_chain_lr_test"
     plugins:
       - EOSIO/anka#v0.6.0:
