@@ -722,7 +722,7 @@
 cat <<EOF
   - label: ":darwin: macOS 10.15 - Build"
     command:
-      - "git clone \$BUILDKITE_REPO eos && cd eos && $GIT_FETCH git checkout -f \$BUILDKITE_COMMIT && git submodule update --init --recursive"
+      - "git clone $BUILDKITE_REPO eos && cd eos &&  git checkout -f $BUILDKITE_COMMIT && git submodule update --init --recursive"
       - "cd eos && ./.cicd/build.sh"
       - "cd eos && tar -pczf build.tar.gz build && buildkite-agent artifact upload build.tar.gz"
     plugins:
@@ -730,7 +730,7 @@ cat <<EOF
           no-volume: true
           inherit-environment-vars: true
           vm-name: 10.15.3_6C_14G_40G
-          vm-registry-tag: clean::cicd::git-ssh::nas::brew::buildkite-agent::eos-macos-10.15-pinned-79e0da1b868051ef7cac94ca0741f13ef2f6787d
+          vm-registry-tag: clean::cicd::git-ssh::nas::brew::buildkite-agent::eos-macos-10.15-pinned-2ffa42e95ad267910a57078bc07cc52274c5567b
           modify-cpu: 12
           modify-ram: 24
           always-pull: true
@@ -751,7 +751,7 @@ cat <<EOF
       IMAGE_TAG: macos-10.15-pinned
       PLATFORM_TYPE: pinned
       TAG_COMMANDS: "git clone git@github.com:EOSIO/eos.git eos && cd eos &&  git checkout -f $BUILDKITE_COMMIT && git submodule update --init --recursive && export IMAGE_TAG=macos-10.15-pinned && export PLATFORM_TYPE=pinned && . ./.cicd/platforms/pinned/macos-10.15-pinned.sh && cd ~/eos && cd .. && rm -rf eos"
-      PROJECT_TAG: eos-macos-10.15-pinned-79e0da1b868051ef7cac94ca0741f13ef2f6787d
+      PROJECT_TAG: eos-macos-10.15-pinned-2ffa42e95ad267910a57078bc07cc52274c5567b
     timeout: 180
     agents: "queue=mac-anka-large-node-fleet"
     skip: ${SKIP_MACOS_10_15}
@@ -770,7 +770,7 @@ cat <<EOF
           no-volume: true
           inherit-environment-vars: true
           vm-name: 10.15.3_6C_14G_40G
-          vm-registry-tag: clean::cicd::git-ssh::nas::brew::buildkite-agent::eos-macos-10.15-pinned-79e0da1b868051ef7cac94ca0741f13ef2f6787d
+          vm-registry-tag: clean::cicd::git-ssh::nas::brew::buildkite-agent::eos-macos-10.15-pinned-2ffa42e95ad267910a57078bc07cc52274c5567b
           always-pull: true
           debug: true
           wait-network: true
