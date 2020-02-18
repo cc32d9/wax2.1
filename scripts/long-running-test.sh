@@ -33,7 +33,7 @@ if [[ -z "$TEST" ]]; then # run all serial tests
         # run tests
         set +e # defer ctest error handling to end
         echo '$ ctest -L long_running_tests --output-on-failure -T Test'
-        ctest -L long_running_tests -VV --output-on-failure -T Test
+        ctest -L long_running_tests -VV --debug -T Test
         EXIT_STATUS=$?
         echo 'Done running long-running tests.'
     else
