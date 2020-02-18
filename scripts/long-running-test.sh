@@ -32,6 +32,7 @@ if [[ -z "$TEST" ]]; then # run all serial tests
         echo "$TEST_COUNT tests found."
         # run tests
         set +e # defer ctest error handling to end
+        /usr/bin/env python3 -V
         echo '$ ctest -L long_running_tests --output-on-failure -T Test'
         ctest -L long_running_tests -VV --debug -T Test
         EXIT_STATUS=$?
