@@ -48,8 +48,8 @@ else # run specific serial test
         echo "$TEST found."
         # run tests
         set +e # defer ctest error handling to end
-        echo "$ ctest -R ^$TEST$ --output-on-failure -T Test"
-        ctest -R ^$TEST$ -VV --debug --output-on-failure -T Test
+        echo "$ ctest -R ^$TEST$ -VV --debug -T Test"
+        ctest -R ^$TEST$ -VV --debug -T Test
         EXIT_STATUS=$?
         echo "Done running $TEST."
     else
