@@ -14,6 +14,12 @@ import math
 import re
 import signal
 
+import sys
+print("Python version")
+print (sys.version)
+print("Version info.")
+print (sys.version_info)
+
 ###############################################################
 # nodeos_forked_chain_test
 # 
