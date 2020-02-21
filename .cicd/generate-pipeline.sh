@@ -750,7 +750,7 @@ cat <<EOF
       TEMPLATE_TAG: clean::cicd::git-ssh::nas::brew::buildkite-agent
       IMAGE_TAG: macos-10.14-pinned
       PLATFORM_TYPE: pinned
-      TAG_COMMANDS: "git clone git@github.com:EOSIO/eos.git eos && cd eos &&  git checkout -f $BUILDKITE_COMMIT && git submodule update --init --recursive && export IMAGE_TAG=macos-10.15-pinned && export PLATFORM_TYPE=pinned && . ./.cicd/platforms/pinned/macos-10.15-pinned.sh && cd ~/eos && cd .. && rm -rf eos"
+      TAG_COMMANDS: "git clone git@github.com:EOSIO/eos.git eos && cd eos &&  git checkout -f $BUILDKITE_COMMIT && git submodule update --init --recursive && export IMAGE_TAG=macos-10.14-pinned && export PLATFORM_TYPE=pinned && . ./.cicd/platforms/pinned/macos-10.14-pinned.sh && cd ~/eos && cd .. && rm -rf eos"
       PROJECT_TAG: eos-macos-10.14-pinned-9924df22e55b7798746d0de746d272f9edc5546d
     timeout: 180
     agents: "queue=mac-anka-large-node-fleet"
