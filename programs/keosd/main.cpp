@@ -43,13 +43,19 @@ int main(int argc, char** argv)
          .default_unix_socket_path = keosd::config::key_store_executable_name + ".sock",
          .default_http_port = 0
       });
+      std::cout << "keosd main.cpp --------11111111--------\n";
       app().register_plugin<wallet_api_plugin>();
       if(!app().initialize<wallet_plugin, wallet_api_plugin, http_plugin>(argc, argv))
          return -1;
+      std::cout << "keosd main.cpp --------22222222--------\n";
       auto& http = app().get_plugin<http_plugin>();
+      std::cout << "keosd main.cpp --------3333333--------\n";
       http.add_handler("/v1/" + keosd::config::key_store_executable_name + "/stop", [&a=app()](string, string, url_response_callback cb) { cb(200, fc::variant(fc::variant_object())); a.quit(); } );
+      std::cout << "keosd main.cpp --------4444444--------\n";
       app().startup();
+      std::cout << "keosd main.cpp --------5555555--------\n";
       app().exec();
+      std::cout << "keosd main.cpp --------6666666--------\n";
    } catch (const fc::exception& e) {
       elog("${e}", ("e",e.to_detail_string()));
    } catch (const boost::exception& e) {

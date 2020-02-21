@@ -938,8 +938,13 @@ bool local_port_used() {
     local::stream_protocol::socket socket(ios);
     boost::system::error_code ec;
     socket.connect(endpoint, ec);
-
-    return !ec;
+    std::cout << "------local_port_used:" << ec << std::endl;
+    if (socket.is_open())
+    {
+       std::cout << "------local_port_used: port is opened" << ec << std::endl;
+       return !ec;
+    }
+    return false;
 }
 
 void try_local_port(uint32_t duration) {
@@ -1002,7 +1007,7 @@ void ensure_keosd_running(CLI::App* app) {
         if (keos.running()) {
             std::cerr << binPath << " launched" << std::endl;
             keos.detach();
-            try_local_port(2000);
+            try_local_port(2000000);
         } else {
             std::cerr << "No wallet service listening on " << wallet_url << ". Failed to launch " << binPath << std::endl;
         }

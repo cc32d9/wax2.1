@@ -153,7 +153,7 @@ namespace eosio { namespace client { namespace http {
       resolved_addresses.reserve(result.size());
       optional<uint16_t> resolved_port;
       bool is_loopback = true;
-
+std::cout << "---------------1111111------------\n";
       for(const auto& r : result) {
          const auto& addr = r.endpoint().address();
          if (addr.is_v6()) continue;
@@ -191,7 +191,7 @@ namespace eosio { namespace client { namespace http {
    if( !postdata.is_null() ) {
       postjson = print_request ? fc::json::to_pretty_string( postdata ) : fc::json::to_string( postdata, fc::time_point::maximum() );
    }
-
+   std::cout << "---------do_http_call:" << cp.url.port << std::endl;
    const auto& url = cp.url;
 
    boost::asio::streambuf request;
@@ -256,7 +256,8 @@ namespace eosio { namespace client { namespace http {
    }
 
    const auto response_result = fc::json::from_string(re);
-   if( print_response ) {
+//   if( print_response )
+   {
       std::cerr << "RESPONSE:" << std::endl
                 << "---------------------" << std::endl
                 << fc::json::to_pretty_string( response_result ) << std::endl

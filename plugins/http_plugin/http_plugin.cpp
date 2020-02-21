@@ -377,7 +377,7 @@ namespace eosio {
                } else {
                   fc_dlog( logger, "404 - not found: ${ep}", ("ep", resource) );
                   error_results results{websocketpp::http::status_code::not_found,
-                                        "Not Found", error_results::error_info(fc::exception( FC_LOG_MESSAGE( error, "Unknown Endpoint" )), verbose_http_errors )};
+                                        resource + "Not Found", error_results::error_info(fc::exception( FC_LOG_MESSAGE( error, "Unknown Endpoint" )), verbose_http_errors )};
                   con->set_body( fc::json::to_string( results, fc::time_point::now() + max_response_time ));
                   con->set_status( websocketpp::http::status_code::not_found );
                }
@@ -695,6 +695,7 @@ namespace eosio {
 
    void http_plugin::add_handler(const string& url, const url_handler& handler) {
       fc_ilog( logger, "add api url: ${c}", ("c", url) );
+      std::cout << "\n-----------add_handler:" << url << std::endl;
       my->url_handlers.insert(std::make_pair(url,handler));
    }
 
