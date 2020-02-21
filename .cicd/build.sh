@@ -18,7 +18,7 @@ if [[ "$(uname)" == 'Darwin' ]]; then
         . "/usr/local/opt/nvm/nvm.sh"
         nvm install --lts=dubnium
     else
-        cd ~ && brew install nvm && mkdir -p ~/.nvm && echo "export NVM_DIR=$HOME/.nvm" >> ~/.bash_profile && echo 'source $(brew --prefix nvm)/nvm.sh' >> ~/.bash_profile && cat ~/.bash_profile && source ~/.bash_profile && echo $NVM_DIR && nvm install --lts=dubnium    fi
+        cd ~ && brew install nvm && mkdir -p ~/.nvm && echo "export NVM_DIR=$HOME/.nvm" >> ~/.bash_profile && echo 'source $(brew --prefix nvm)/nvm.sh' >> ~/.bash_profile && cat ~/.bash_profile && source ~/.bash_profile && echo $NVM_DIR && nvm install --lts=dubnium
     fi
     echo "cmake $CMAKE_EXTRAS .."
     cmake $CMAKE_EXTRAS ..
