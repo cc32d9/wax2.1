@@ -65,3 +65,4 @@ RUN bash -c '. ~/.bashrc; nvm install --lts=dubnium' && \
     ln -s "/root/.nvm/versions/node/$(ls -p /root/.nvm/versions/node | sort -Vr | head -1)bin/node" /usr/local/bin/node
 RUN curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
 RUN sudo apt-get install -y nodejs
+RUN echo "Ensure image will push with logic adjustment."
