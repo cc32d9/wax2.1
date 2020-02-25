@@ -9,6 +9,7 @@
 #include <fc/exception/exception.hpp>
 
 #include <boost/exception/diagnostic_information.hpp>
+#include <signal.h>
 
 #include <pwd.h>
 #include "config.hpp"
@@ -31,6 +32,24 @@ bfs::path determine_home_directory()
    return home;
 }
 
+int get_parent_pid(int argc, char** argv) {
+   size_t idx = 1;
+   for (; idx < argc; ++idx)
+   {
+      if (!strcmp(argv[idx], "--parent_pid"))
+      {
+         break;
+      }
+   }
+   const size_t pid_idx = idx + 1;
+   if (pid_idx < argc)
+   {
+      std::cout << "Parent id:" << atoi(argv[pid_idx]) << std::endl;
+      return atoi(argv[pid_idx]);
+   }
+   return -1;
+}
+
 int main(int argc, char** argv)
 {
    try {
@@ -43,9 +62,12 @@ int main(int argc, char** argv)
          .default_unix_socket_path = keosd::config::key_store_executable_name + ".sock",
          .default_http_port = 0
       });
-      std::cout << "keosd main.cpp --------11111111--------\n";
+      const int parent_id = get_parent_pid(argc, argv);
+      int argc_new = (parent_id > 0) ? argc - 2 : argc;
+      char** argv_new = (parent_id > 0) ? &argv[2] : argv;
+         std::cout << "keosd main.cpp --------11111111--------\n";
       app().register_plugin<wallet_api_plugin>();
-      if(!app().initialize<wallet_plugin, wallet_api_plugin, http_plugin>(argc, argv))
+      if(!app().initialize<wallet_plugin, wallet_api_plugin, http_plugin>(argc_new, argv_new))
          return -1;
       std::cout << "keosd main.cpp --------22222222--------\n";
       auto& http = app().get_plugin<http_plugin>();
@@ -54,6 +76,13 @@ int main(int argc, char** argv)
       std::cout << "keosd main.cpp --------4444444--------\n";
       app().startup();
       std::cout << "keosd main.cpp --------5555555--------\n";
+
+      if (parent_id > 0)
+      {
+         const int ret_sig_que = kill(parent_id, SIGUSR1);
+         std::cout << "Send signal to parent with ret code:" << ret_sig_que << std::endl;
+      }
+
       app().exec();
       std::cout << "keosd main.cpp --------6666666--------\n";
    } catch (const fc::exception& e) {

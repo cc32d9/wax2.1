@@ -46,14 +46,14 @@ void wallet_plugin::plugin_initialize(const variables_map& options) {
          else
             wallet_manager_ptr->set_dir(dir);
       }
-      std::cout << "\n111111111\n";
+      std::cout << "\nplugin_initialize111111111\n";
       if (options.count("unlock-timeout")) {
          auto timeout = options.at("unlock-timeout").as<int64_t>();
          EOS_ASSERT(timeout > 0, chain::invalid_lock_timeout_exception, "Please specify a positive timeout ${t}", ("t", timeout));
          std::chrono::seconds t(timeout);
          wallet_manager_ptr->set_timeout(t);
       }
-      std::cout << "\n222222222222\n";
+      std::cout << "\nplugin_initialize222222222222\n";
       if (options.count("yubihsm-authkey")) {
          uint16_t key = options.at("yubihsm-authkey").as<uint16_t>();
          string connector_endpoint = "http://localhost:12345";
@@ -63,7 +63,7 @@ void wallet_plugin::plugin_initialize(const variables_map& options) {
             wallet_manager_ptr->own_and_use_wallet("YubiHSM", make_unique<yubihsm_wallet>(connector_endpoint, key));
          }FC_LOG_AND_RETHROW()
       }
-      std::cout << "\n33333333333333\n";
+      std::cout << "\nplugin_initialize33333333333333\n";
    } FC_LOG_AND_RETHROW()
 }
 

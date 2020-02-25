@@ -77,6 +77,8 @@ Options:
 #include <fc/exception/exception.hpp>
 #include <fc/variant_object.hpp>
 #include <fc/static_variant.hpp>
+#include <csignal>
+#include <thread>
 
 #include <eosio/chain/name.hpp>
 #include <eosio/chain/config.hpp>
@@ -958,6 +960,36 @@ void try_local_port(uint32_t duration) {
    }
 }
 
+struct keosd_signal
+{
+   static void init()
+   {
+      signal_received_ = 0;
+      std::signal(SIGUSR1, keosd_signal::handle_keosd_start_signal);
+   }
+static    void handle_keosd_start_signal(int)
+   {
+      signal_received_ = 1;
+      std::cout << "\n----------handle_keosd_start_signal------"  << std::endl;
+   }
+static   void wait_keosd_start()
+   {
+      using namespace std::chrono;
+      const auto start_time = duration_cast<std::chrono::milliseconds>( system_clock::now().time_since_epoch() ).count();
+      while ( signal_received_ != 1) {
+         if (duration_cast<std::chrono::milliseconds>( system_clock::now().time_since_epoch()).count() - start_time > wait_duration_ms_ )
+         {
+            std::cerr << "Unable to get keosd ready!\n";
+            break;
+         }
+         std::this_thread::sleep_for(std::chrono::milliseconds(wait_duration_ms_ / 10));
+      }
+   }
+   static int signal_received_;
+   static constexpr uint32_t wait_duration_ms_ = 8000;
+};
+int keosd_signal::signal_received_;
+
 void ensure_keosd_running(CLI::App* app) {
     if (no_auto_keosd)
         return;
@@ -992,7 +1024,10 @@ void ensure_keosd_running(CLI::App* app) {
         namespace bp = boost::process;
         binPath = boost::filesystem::canonical(binPath);
 
+        keosd_signal::init();
         vector<std::string> pargs;
+        pargs.push_back("--parent_pid");
+        pargs.push_back(std::to_string(getpid()));
         pargs.push_back("--http-server-address");
         pargs.push_back("");
         pargs.push_back("--https-server-address");
@@ -1000,14 +1035,22 @@ void ensure_keosd_running(CLI::App* app) {
         pargs.push_back("--unix-socket-path");
         pargs.push_back(string(key_store_executable_name) + ".sock");
 
+        bp::ipstream is; //reading pipe-stream
         ::boost::process::child keos(binPath, pargs,
                                      bp::std_in.close(),
-                                     bp::std_out > bp::null,
+                                     bp::std_out > is,
                                      bp::std_err > bp::null);
         if (keos.running()) {
             std::cerr << binPath << " launched" << std::endl;
             keos.detach();
-            try_local_port(2000000);
+
+           //try_local_port(2000);
+           keosd_signal::wait_keosd_start();
+/*           std::string aline;
+           while(std::getline(is, aline) && aline != "Send signal to parent with ret code:0")
+           {
+              std::cout << "\n----:" << getpid() << " From keosd: " << aline << std::endl;
+           }*/
         } else {
             std::cerr << "No wallet service listening on " << wallet_url << ". Failed to launch " << binPath << std::endl;
         }
