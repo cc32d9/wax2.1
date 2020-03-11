@@ -324,11 +324,8 @@ namespace eosio {
                std::string body = con->get_request_body();
                std::string resource = con->get_uri()->get_resource();
                auto handler_itr = url_handlers.find( resource );
-               if( handler_itr != url_handlers.end()) {
-                  con->defer_http_response();
-                  bytes_in_flight += body.size();
-                  app().post( appbase::priority::low,
-                              [&ioc = thread_pool->get_executor(), &bytes_in_flight = this->bytes_in_flight,
+
+               std::function<void()> process = [&ioc = thread_pool->get_executor(), &bytes_in_flight = this->bytes_in_flight,
                                handler_itr, this, resource{std::move( resource )}, body{std::move( body )}, con]() mutable {
                      const size_t body_size = body.size();
                      if( !verify_max_bytes_in_flight( con ) ) {
@@ -372,7 +369,16 @@ namespace eosio {
                         con->send_http_response();
                      }
                      bytes_in_flight -= body_size;
-                  } );
+                  };
+
+               if( handler_itr != url_handlers.end()) {
+                  con->defer_http_response();
+                  bytes_in_flight += body.size();
+                  if( resource == "/v1/trace_api/get_block" ) { // todo: feed in flag url_handler
+                     process();
+                  } else {
+                     app().post( appbase::priority::low, [process] { process(); } );
+                  }
 
                } else {
                   fc_dlog( logger, "404 - not found: ${ep}", ("ep", resource) );
