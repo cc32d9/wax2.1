@@ -247,7 +247,8 @@ public:
             try {
                std::vector<public_key_type> keys = json_keys.template as<std::vector<public_key_type>>();
                signing_keys = std::move(keys);
-            } EOS_RETHROW_EXCEPTIONS(public_key_type_exception, "Invalid public key array format '${data}'", ("data", fc::json::to_string(json_keys)))
+            } EOS_RETHROW_EXCEPTIONS(public_key_type_exception, "Invalid public key array format '${data}'", 
+                                     ("data", fc::json::to_string(json_keys, fc::time_point::maximum())))
          }
       }
       return signing_keys;
@@ -319,6 +320,28 @@ string generate_nonce_string() {
 chain::action generate_nonce_action() {
    return chain::action( {}, config::null_account_name, name("nonce"), fc::raw::pack(fc::time_point::now().time_since_epoch().count()));
 }
+
+//resolver for ABI serializer to decode actions in proposed transaction in multisig contract
+auto abi_serializer_resolver = [](const name& account) -> fc::optional<abi_serializer> {
+  static unordered_map<account_name, fc::optional<abi_serializer> > abi_cache;
+  auto it = abi_cache.find( account );
+  if ( it == abi_cache.end() ) {
+    const auto raw_abi_result = call(get_raw_abi_func, fc::mutable_variant_object("account_name", account));
+    const auto raw_abi_blob = raw_abi_result["abi"].as_blob().data;
+
+    fc::optional<abi_serializer> abis;
+    if (raw_abi_blob.size() != 0) {
+      abis.emplace(fc::raw::unpack<abi_def>(raw_abi_blob), abi_serializer_max_time);
+    } else {
+      std::cerr << "ABI for contract " << account.to_string() << " not found. Action data will be shown in hex only." << std::endl;
+    }
+    abi_cache.emplace( account, abis );
+
+    return abis;
+  }
+
+  return it->second;
+};
 
 void prompt_for_wallet_password(string& pw, const string& name) {
    if(pw.size() == 0 && name != "SecureEnclave") {
@@ -398,7 +421,13 @@ fc::variant push_transaction( signed_transaction& trx, const std::vector<public_
       }
    } else {
       if (!tx_return_packed) {
-        return fc::variant(trx);
+         try {
+            fc::variant unpacked_data_trx;
+            abi_serializer::to_variant(trx, unpacked_data_trx, abi_serializer_resolver, abi_serializer_max_time);
+            return unpacked_data_trx;
+         } catch (...) {
+            return fc::variant(trx);
+         }
       } else {
         return fc::variant(packed_transaction(trx, compression));
       }
@@ -418,7 +447,7 @@ void print_action( const fc::variant& at ) {
    const auto& act = at["act"].get_object();
    auto code = act["account"].as_string();
    auto func = act["name"].as_string();
-   auto args = fc::json::to_string( act["data"] );
+   auto args = fc::json::to_string( act["data"], fc::time_point::maximum() );
    auto console = at["console"].as_string();
 
    /*
@@ -438,28 +467,6 @@ void print_action( const fc::variant& at ) {
       }
    }
 }
-
-//resolver for ABI serializer to decode actions in proposed transaction in multisig contract
-auto abi_serializer_resolver = [](const name& account) -> fc::optional<abi_serializer> {
-   static unordered_map<account_name, fc::optional<abi_serializer> > abi_cache;
-   auto it = abi_cache.find( account );
-   if ( it == abi_cache.end() ) {
-      auto result = call(get_abi_func, fc::mutable_variant_object("account_name", account));
-      auto abi_results = result.as<eosio::chain_apis::read_only::get_abi_results>();
-
-      fc::optional<abi_serializer> abis;
-      if( abi_results.abi.valid() ) {
-         abis.emplace( *abi_results.abi, abi_serializer_max_time );
-      } else {
-         std::cerr << "ABI for contract " << account.to_string() << " not found. Action data will be shown in hex only." << std::endl;
-      }
-      abi_cache.emplace( account, abis );
-
-      return abis;
-   }
-
-   return it->second;
-};
 
 bytes variant_to_bin( const account_name& account, const action_name& action, const fc::variant& action_args_var ) {
    auto abis = abi_serializer_resolver( account );
@@ -715,7 +722,8 @@ authority parse_json_authority(const std::string& authorityJsonOrFile) {
    fc::variant authority_var = json_from_file_or_string(authorityJsonOrFile);
    try {
       return authority_var.as<authority>();
-   } EOS_RETHROW_EXCEPTIONS(authority_type_exception, "Invalid authority format '${data}'", ("data", fc::json::to_string(authority_var)))
+   } EOS_RETHROW_EXCEPTIONS(authority_type_exception, "Invalid authority format '${data}'",
+                            ("data", fc::json::to_string(authority_var, fc::time_point::maximum())))
 }
 
 authority parse_json_authority_or_key(const std::string& authorityJsonOrFile) {
@@ -1360,7 +1368,7 @@ struct get_schedule_subcommand {
             static_assert( std::is_same<decltype(a), static_variant<block_signing_authority_v0>>::value,
                            "Updates maybe needed if block_signing_authority changes" );
             block_signing_authority_v0 auth = a.get<block_signing_authority_v0>();
-            printf( "%s\n", fc::json::to_string( auth ).c_str() );
+            printf( "%s\n", fc::json::to_string( auth, fc::time_point::maximum() ).c_str() );
          }
       }
       printf("\n");
@@ -2177,7 +2185,7 @@ void get_account( const string& accountName, const string& coresym, bool json_fo
          std::cout << indent << std::string(depth*3, ' ') << name << ' ' << std::setw(5) << p.required_auth.threshold << ":    ";
          const char *sep = "";
          for ( auto it = p.required_auth.keys.begin(); it != p.required_auth.keys.end(); ++it ) {
-            std::cout << sep << it->weight << ' ' << string(it->key);
+            std::cout << sep << it->weight << ' ' << it->key.to_string();
             sep = ", ";
          }
          for ( auto& acc : p.required_auth.accounts ) {
@@ -2297,9 +2305,13 @@ void get_account( const string& accountName, const string& coresym, bool json_fo
          return ss.str();
       };
 
-
       std::cout << std::fixed << setprecision(3);
-      std::cout << indent << std::left << std::setw(11) << "used:"      << std::right << std::setw(18) << to_pretty_net( res.net_limit.used ) << "\n";
+      std::cout << indent << std::left << std::setw(11) << "used:" << std::right << std::setw(18);
+      if( res.net_limit.current_used ) {
+         std::cout << to_pretty_net(*res.net_limit.current_used) << "\n";
+      } else {
+         std::cout << to_pretty_net(res.net_limit.used) << "    ( out of date )\n";
+      }
       std::cout << indent << std::left << std::setw(11) << "available:" << std::right << std::setw(18) << to_pretty_net( res.net_limit.available ) << "\n";
       std::cout << indent << std::left << std::setw(11) << "limit:"     << std::right << std::setw(18) << to_pretty_net( res.net_limit.max ) << "\n";
       std::cout << std::endl;
@@ -2326,9 +2338,13 @@ void get_account( const string& accountName, const string& coresym, bool json_fo
          }
       }
 
-
       std::cout << std::fixed << setprecision(3);
-      std::cout << indent << std::left << std::setw(11) << "used:"      << std::right << std::setw(18) << to_pretty_time( res.cpu_limit.used ) << "\n";
+      std::cout << indent << std::left << std::setw(11) << "used:" << std::right << std::setw(18);
+      if( res.cpu_limit.current_used ) {
+         std::cout << to_pretty_time(*res.cpu_limit.current_used) << "\n";
+      } else {
+         std::cout << to_pretty_time(res.cpu_limit.used) << "    ( out of date )\n";
+      }
       std::cout << indent << std::left << std::setw(11) << "available:" << std::right << std::setw(18) << to_pretty_time( res.cpu_limit.available ) << "\n";
       std::cout << indent << std::left << std::setw(11) << "limit:"     << std::right << std::setw(18) << to_pretty_time( res.cpu_limit.max ) << "\n";
       std::cout << std::endl;
@@ -2469,8 +2485,8 @@ int main( int argc, char** argv ) {
       }
 
       auto pk    = r1 ? private_key_type::generate_r1() : private_key_type::generate();
-      auto privs = string(pk);
-      auto pubs  = string(pk.get_public_key());
+      auto privs = pk.to_string();
+      auto pubs  = pk.get_public_key().to_string();
       if (print_console) {
          std::cout << localized("Private key: ${key}", ("key",  privs) ) << std::endl;
          std::cout << localized("Public key: ${key}", ("key", pubs ) ) << std::endl;
@@ -2504,7 +2520,8 @@ int main( int argc, char** argv ) {
          signed_transaction trx;
          try {
             abi_serializer::from_variant( trx_var, trx, abi_serializer_resolver, abi_serializer_max_time );
-         } EOS_RETHROW_EXCEPTIONS( transaction_type_exception, "Invalid transaction format: '${data}'", ("data", fc::json::to_string(trx_var)))
+         } EOS_RETHROW_EXCEPTIONS( transaction_type_exception, "Invalid transaction format: '${data}'",
+                                   ("data", fc::json::to_string(trx_var, fc::time_point::maximum())))
          std::cout << fc::json::to_pretty_string( packed_transaction( trx, packed_transaction::compression_type::none )) << std::endl;
       } else {
          try {
@@ -2525,7 +2542,8 @@ int main( int argc, char** argv ) {
       packed_transaction packed_trx;
       try {
          fc::from_variant<packed_transaction>( packed_trx_var, packed_trx );
-      } EOS_RETHROW_EXCEPTIONS( transaction_type_exception, "Invalid packed transaction format: '${data}'", ("data", fc::json::to_string(packed_trx_var)))
+      } EOS_RETHROW_EXCEPTIONS( transaction_type_exception, "Invalid packed transaction format: '${data}'",
+                                ("data", fc::json::to_string(packed_trx_var, fc::time_point::maximum())))
       signed_transaction strx = packed_trx.get_signed_transaction();
       fc::variant trx_var;
       if( unpack_action_data_flag ) {
@@ -2581,15 +2599,30 @@ int main( int argc, char** argv ) {
    // get block
    string blockArg;
    bool get_bhs = false;
+   bool get_binfo = false;
    auto getBlock = get->add_subcommand("block", localized("Retrieve a full block from the blockchain"), false);
    getBlock->add_option("block", blockArg, localized("The number or ID of the block to retrieve"))->required();
    getBlock->add_flag("--header-state", get_bhs, localized("Get block header state from fork database instead") );
-   getBlock->set_callback([&blockArg,&get_bhs] {
-      auto arg = fc::mutable_variant_object("block_num_or_id", blockArg);
-      if( get_bhs ) {
-         std::cout << fc::json::to_pretty_string(call(get_block_header_state_func, arg)) << std::endl;
+   getBlock->add_flag("--info", get_binfo, localized("Get block info from the blockchain by block num only") );
+   getBlock->set_callback([&blockArg, &get_bhs, &get_binfo] {
+      EOSC_ASSERT( !(get_bhs && get_binfo), "ERROR: Either --header-state or --info can be set" );
+      if (get_binfo) {
+         fc::optional<int64_t> block_num;
+         try {
+            block_num = fc::to_int64(blockArg);
+         } catch (...) {
+            // error is handled in assertion below
+         }
+         EOSC_ASSERT( block_num.valid() && (*block_num > 0), "Invalid block num: ${block_num}", ("block_num", blockArg) );
+         const auto arg = fc::variant_object("block_num", static_cast<uint32_t>(*block_num));
+         std::cout << fc::json::to_pretty_string(call(get_block_info_func, arg)) << std::endl;
       } else {
-         std::cout << fc::json::to_pretty_string(call(get_block_func, arg)) << std::endl;
+         const auto arg = fc::variant_object("block_num_or_id", blockArg);
+         if (get_bhs) {
+            std::cout << fc::json::to_pretty_string(call(get_block_header_state_func, arg)) << std::endl;
+         } else {
+            std::cout << fc::json::to_pretty_string(call(get_block_func, arg)) << std::endl;
+         }
       }
    });
 
@@ -2669,15 +2702,19 @@ int main( int argc, char** argv ) {
    getAbi->add_option("name", accountName, localized("The name of the account whose abi should be retrieved"))->required();
    getAbi->add_option("-f,--file",filename, localized("The name of the file to save the contract .abi to instead of writing to console") );
    getAbi->set_callback([&] {
-      auto result = call(get_abi_func, fc::mutable_variant_object("account_name", accountName));
-
-      auto abi  = fc::json::to_pretty_string( result["abi"] );
-      if( filename.size() ) {
-         std::cerr << localized("saving abi to ${filename}", ("filename", filename)) << std::endl;
-         std::ofstream abiout( filename.c_str() );
-         abiout << abi;
+      const auto raw_abi_result = call(get_raw_abi_func, fc::mutable_variant_object("account_name", accountName));
+      const auto raw_abi_blob = raw_abi_result["abi"].as_blob().data;
+      if (raw_abi_blob.size() != 0) {
+          const auto abi = fc::json::to_pretty_string(fc::raw::unpack<abi_def>(raw_abi_blob));
+          if (filename.size()) {
+              std::cerr << localized("saving abi to ${filename}", ("filename", filename)) << std::endl;
+              std::ofstream abiout(filename.c_str());
+              abiout << abi;
+          } else {
+              std::cout << abi << "\n";
+          }
       } else {
-         std::cout << abi << "\n";
+        FC_THROW_EXCEPTION(key_not_found_exception, "Key ${key}", ("key", "abi"));
       }
    });
 
@@ -2894,7 +2931,7 @@ int main( int argc, char** argv ) {
                   args = fc::json::to_pretty_string( act["data"] );
               }
               else {
-                 args = fc::json::to_string( act["data"] );
+                 args = fc::json::to_string( act["data"], fc::time_point::maximum() );
                  if( !fullact ) {
                     args = args.substr(0,60) + "...";
                  }
@@ -3314,7 +3351,7 @@ int main( int argc, char** argv ) {
 
       fc::variants vs = {fc::variant(wallet_name), fc::variant(wallet_key)};
       call(wallet_url, wallet_import_key, vs);
-      std::cout << localized("imported private key for: ${pubkey}", ("pubkey", std::string(pubkey))) << std::endl;
+      std::cout << localized("imported private key for: ${pubkey}", ("pubkey", pubkey.to_string())) << std::endl;
    });
 
    // remove keys from wallet
@@ -3407,7 +3444,8 @@ int main( int argc, char** argv ) {
       signed_transaction trx;
       try {
         trx = trx_var.as<signed_transaction>();
-      } EOS_RETHROW_EXCEPTIONS(transaction_type_exception, "Invalid transaction format: '${data}'", ("data", fc::json::to_string(trx_var)))
+      } EOS_RETHROW_EXCEPTIONS(transaction_type_exception, "Invalid transaction format: '${data}'",
+                               ("data", fc::json::to_string(trx_var, fc::time_point::maximum())))
 
       fc::optional<chain_id_type> chain_id;
 
@@ -3548,7 +3586,8 @@ int main( int argc, char** argv ) {
       transaction proposed_trx;
       try {
          proposed_trx = trx_var.as<transaction>();
-      } EOS_RETHROW_EXCEPTIONS(transaction_type_exception, "Invalid transaction format: '${data}'", ("data", fc::json::to_string(trx_var)))
+      } EOS_RETHROW_EXCEPTIONS(transaction_type_exception, "Invalid transaction format: '${data}'",
+                               ("data", fc::json::to_string(trx_var, fc::time_point::maximum())))
       bytes proposed_trx_serialized = variant_to_bin( name(proposed_contract), name(proposed_action), trx_var );
 
       vector<permission_level> reqperm;
