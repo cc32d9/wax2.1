@@ -1726,6 +1726,8 @@ bool producer_plugin_impl::process_unapplied_trxs( const fc::time_point& deadlin
                trx_deadline = deadline;
             }
 
+            uint32_t billed_cpu_time_us = trx->billed_cpu_time_us;
+            auto start = fc::time_point::now();
             auto trace = chain.push_transaction( trx, trx_deadline, trx->billed_cpu_time_us, false );
             if( trace->except ) {
                if( exception_is_exhausted( *trace->except, deadline_is_subjective ) ) {
@@ -1735,6 +1737,8 @@ bool producer_plugin_impl::process_unapplied_trxs( const fc::time_point& deadlin
                      break;
                   }
                } else {
+                  fc_dlog( _log, "Trx failed, prev billed ${pbt)us, ran ${bt}us, id: ${id}",
+                           ("pbt", billed_cpu_time_us)("bt", (fc::time_point::now() - start).count())("id", trx->id()) );
                   // this failed our configured maximum transaction time, we don't want to replay it
                   ++num_failed;
                   itr = _unapplied_transactions.erase( itr );
