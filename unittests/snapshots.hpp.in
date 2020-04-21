@@ -4,6 +4,8 @@
    struct NAME {\
        static fc::variant json() { return read_json_snapshot  ("${CMAKE_BINARY_DIR}/unittests/snapshots/" #NAME ".json.gz"); } \
        static std::string bin()  { return read_binary_snapshot("${CMAKE_BINARY_DIR}/unittests/snapshots/" #NAME ".bin.gz" ); } \
+       static std::string tmpname_json()  { return std::string("${CMAKE_BINARY_DIR}/unittests/snapshots/tmp.") +  #NAME + ".json"; } \
+       static std::string tmpname_bin()  { return std::string("${CMAKE_BINARY_DIR}/unittests/snapshots/tmp.") +  #NAME + ".bin"; } \
    };\
 
 namespace eosio {

@@ -118,6 +118,15 @@ struct variant_snapshot_suite {
    static snapshot_t load_from_file() {
       return Snapshot::json();
    }
+
+   template<typename Snapshot>
+   static void save_tmpfile(const snapshot_t &in) {
+     std::ofstream dst;
+     dst.open(Snapshot::tmpname_json(), std::ofstream::out | std::ofstream::binary);
+     fc::json::to_stream(dst, in, fc::time_point::now() + fc::microseconds(10000000));
+     dst.close();
+     std::cout << "Wrote " << Snapshot::tmpname_json() << "\n";
+   }
 };
 
 struct buffered_snapshot_suite {
@@ -164,6 +173,15 @@ struct buffered_snapshot_suite {
    template<typename Snapshot>
    static snapshot_t load_from_file() {
       return Snapshot::bin();
+   }
+
+   template<typename Snapshot>
+   static void save_tmpfile(const snapshot_t &in) {
+     std::ofstream dst;
+     dst.open(Snapshot::tmpname_bin(), std::ofstream::out | std::ofstream::binary);
+     dst << in;
+     dst.close();
+     std::cout << "Wrote " << Snapshot::tmpname_bin() << "\n";
    }
 };
 
@@ -443,6 +461,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_compatible_versions, SNAPSHOT_SUITE, snapshot
    chain.control->abort_block();
 
    {
+     // write a temporary snapshot file
+      auto tmp_writer = SNAPSHOT_SUITE::get_writer();
+      chain.control->write_snapshot(tmp_writer);
+      auto snpsht = SNAPSHOT_SUITE::finalize(tmp_writer);
+      SNAPSHOT_SUITE::template save_tmpfile<snapshots::snap_v2>(snpsht);
+   }
+
+   {
       static_assert(chain_snapshot_header::minimum_compatible_version <= 2, "version 2 unit test is no longer needed.  Please clean up data files");
       auto v2 = SNAPSHOT_SUITE::template load_from_file<snapshots::snap_v2>();
       int ordinal = 0;
@@ -486,6 +512,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_pending_schedule_snapshot, SNAPSHOT_SUITE, sn
    BOOST_REQUIRE_EQUAL(gpo.proposed_schedule.version, 1);
    BOOST_REQUIRE_EQUAL(gpo.proposed_schedule.producers.size(), 1);
    BOOST_REQUIRE_EQUAL(gpo.proposed_schedule.producers[0].producer_name.to_string(), "snapshot");
+
+   {
+     // write a temporary snapshot file
+      auto tmp_writer = SNAPSHOT_SUITE::get_writer();
+      chain.control->write_snapshot(tmp_writer);
+      auto snpsht = SNAPSHOT_SUITE::finalize(tmp_writer);
+      SNAPSHOT_SUITE::template save_tmpfile<snapshots::snap_v2_prod_sched>(snpsht);
+   }
 
    static_assert(chain_snapshot_header::minimum_compatible_version <= 2, "version 2 unit test is no longer needed.  Please clean up data files");
    auto v2 = SNAPSHOT_SUITE::template load_from_file<snapshots::snap_v2_prod_sched>();
