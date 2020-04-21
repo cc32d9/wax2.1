@@ -1,9 +1,7 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE
- */
 #include <sstream>
 
+#include <eosio/chain/block_log.hpp>
+#include <eosio/chain/global_property_object.hpp>
 #include <eosio/chain/snapshot.hpp>
 #include <eosio/testing/tester.hpp>
 
@@ -11,44 +9,58 @@
 #include <boost/test/unit_test.hpp>
 
 #include <contracts.hpp>
+#include <snapshots.hpp>
 
 using namespace eosio;
 using namespace testing;
 using namespace chain;
 
+chainbase::bfs::path get_parent_path(chainbase::bfs::path blocks_dir, int ordinal) {
+   chainbase::bfs::path leaf_dir = blocks_dir.filename();
+   if (leaf_dir.generic_string() == std::string("blocks")) {
+      blocks_dir = blocks_dir.parent_path();
+      leaf_dir = blocks_dir.filename();
+      try {
+         auto ordinal_for_config = boost::lexical_cast<int>(leaf_dir.generic_string());
+         blocks_dir = blocks_dir.parent_path();
+      }
+      catch(const boost::bad_lexical_cast& ) {
+         // no extra ordinal directory added to path
+      }
+   }
+   return blocks_dir / std::to_string(ordinal);
+}
+
+controller::config copy_config(const controller::config& config, int ordinal) {
+   controller::config copied_config = config;
+   auto parent_path = get_parent_path(config.blocks_dir, ordinal);
+   copied_config.blocks_dir = parent_path / config.blocks_dir.filename().generic_string();
+   copied_config.state_dir = parent_path / config.state_dir.filename().generic_string();
+   return copied_config;
+}
+
+controller::config copy_config_and_files(const controller::config& config, int ordinal) {
+   controller::config copied_config = copy_config(config, ordinal);
+   fc::create_directories(copied_config.blocks_dir);
+   fc::copy(config.blocks_dir / "blocks.log", copied_config.blocks_dir / "blocks.log");
+   fc::copy(config.blocks_dir / config::reversible_blocks_dir_name, copied_config.blocks_dir / config::reversible_blocks_dir_name );
+   return copied_config;
+}
+
 class snapshotted_tester : public base_tester {
 public:
-   snapshotted_tester(controller::config config, const snapshot_reader_ptr& snapshot, int ordinal) {
+   enum config_file_handling { dont_copy_config_files, copy_config_files };
+   snapshotted_tester(controller::config config, const snapshot_reader_ptr& snapshot, int ordinal,
+           config_file_handling copy_files_from_config = config_file_handling::dont_copy_config_files) {
       FC_ASSERT(config.blocks_dir.filename().generic_string() != "."
-         && config.state_dir.filename().generic_string() != ".", "invalid path names in controller::config");
+                && config.state_dir.filename().generic_string() != ".", "invalid path names in controller::config");
 
-      controller::config copied_config = config;
-      copied_config.blocks_dir =
-              config.blocks_dir.parent_path() / std::to_string(ordinal).append(config.blocks_dir.filename().generic_string());
-      copied_config.state_dir =
-              config.state_dir.parent_path() / std::to_string(ordinal).append(config.state_dir.filename().generic_string());
+      controller::config copied_config = (copy_files_from_config == copy_config_files)
+                                         ? copy_config_and_files(config, ordinal) : copy_config(config, ordinal);
 
       init(copied_config, snapshot);
    }
 
-   snapshotted_tester(controller::config config, const snapshot_reader_ptr& snapshot, int ordinal, int copy_block_log_from_ordinal) {
-      FC_ASSERT(config.blocks_dir.filename().generic_string() != "."
-         && config.state_dir.filename().generic_string() != ".", "invalid path names in controller::config");
-
-      controller::config copied_config = config;
-      copied_config.blocks_dir =
-              config.blocks_dir.parent_path() / std::to_string(ordinal).append(config.blocks_dir.filename().generic_string());
-      copied_config.state_dir =
-              config.state_dir.parent_path() / std::to_string(ordinal).append(config.state_dir.filename().generic_string());
-
-      // create a copy of the desired block log and reversible
-      auto block_log_path = config.blocks_dir.parent_path() / std::to_string(copy_block_log_from_ordinal).append(config.blocks_dir.filename().generic_string());
-      fc::create_directories(copied_config.blocks_dir);
-      fc::copy(block_log_path / "blocks.log", copied_config.blocks_dir / "blocks.log");
-      fc::copy(block_log_path / config::reversible_blocks_dir_name, copied_config.blocks_dir / config::reversible_blocks_dir_name );
-
-      init(copied_config, snapshot);
-   }
    signed_block_ptr produce_block( fc::microseconds skip_time = fc::milliseconds(config::block_interval_ms) )override {
       return _produce_block(skip_time, false);
    }
@@ -102,6 +114,14 @@ struct variant_snapshot_suite {
       return std::make_shared<reader>(buffer);
    }
 
+   template<typename Snapshot>
+   static void save_tmpfile(const snapshot_t &in) {
+     std::ofstream dst;
+     dst.open(Snapshot::tmpname_json(), std::ofstream::out | std::ofstream::binary);
+     fc::json::to_stream(dst, in);
+     dst.close();
+     std::cout << "Wrote " << Snapshot::tmpname_json() << "\n";
+   }
 };
 
 struct buffered_snapshot_suite {
@@ -145,60 +165,124 @@ struct buffered_snapshot_suite {
       return std::make_shared<reader>(std::make_shared<read_storage_t>(buffer));
    }
 
+   template<typename Snapshot>
+   static void save_tmpfile(const snapshot_t &in) {
+     std::ofstream dst;
+     dst.open(Snapshot::tmpname_bin(), std::ofstream::out | std::ofstream::binary);
+     dst << in;
+     dst.close();
+     std::cout << "Wrote " << Snapshot::tmpname_bin() << "\n";
+   }
 };
 
 BOOST_AUTO_TEST_SUITE(snapshot_tests)
 
 using snapshot_suites = boost::mpl::list<variant_snapshot_suite, buffered_snapshot_suite>;
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(test_exhaustive_snapshot, SNAPSHOT_SUITE, snapshot_suites)
-{
-   tester chain;
+namespace {
+   void variant_diff_helper(const fc::variant& lhs, const fc::variant& rhs, std::function<void(const std::string&, const fc::variant&, const fc::variant&)>&& out){
+      if (lhs.get_type() != rhs.get_type()) {
+         out("", lhs, rhs);
+      } else if (lhs.is_object() ) {
+         const auto& l_obj = lhs.get_object();
+         const auto& r_obj = rhs.get_object();
+         static const std::string sep = ".";
 
-   chain.create_account(N(snapshot));
-   chain.produce_blocks(1);
-   chain.set_code(N(snapshot), contracts::snapshot_test_wasm());
-   chain.set_abi(N(snapshot), contracts::snapshot_test_abi().data());
-   chain.produce_blocks(1);
-   chain.control->abort_block();
+         // test keys from LHS
+         std::set<std::string_view> keys;
+         for (const auto& entry: l_obj) {
+            const auto& l_val = entry.value();
+            const auto& r_iter = r_obj.find(entry.key());
+            if (r_iter == r_obj.end()) {
+               out(sep + entry.key(), l_val, fc::variant());
+            } else {
+               const auto& r_val = r_iter->value();
+               variant_diff_helper(l_val, r_val, [&out, &entry](const std::string& path, const fc::variant& lhs, const fc::variant& rhs){
+                  out(sep + entry.key() + path, lhs, rhs);
+               });
+            }
 
-   static const int generation_count = 8;
-   std::list<snapshotted_tester> sub_testers;
+            keys.insert(entry.key());
+         }
 
-   for (int generation = 0; generation < generation_count; generation++) {
-      // create a new snapshot child
-      auto writer = SNAPSHOT_SUITE::get_writer();
-      chain.control->write_snapshot(writer);
-      auto snapshot = SNAPSHOT_SUITE::finalize(writer);
+         // print keys in RHS that were not tested
+         for (const auto& entry: r_obj) {
+            if (keys.find(entry.key()) != keys.end()) {
+               continue;
+            }
+            const auto& r_val = entry.value();
+            out(sep + entry.key(), fc::variant(), r_val);
+         }
+      } else if (lhs.is_array()) {
+         const auto& l_arr = lhs.get_array();
+         const auto& r_arr = rhs.get_array();
 
-      // create a new child at this snapshot
-      sub_testers.emplace_back(chain.get_config(), SNAPSHOT_SUITE::get_reader(snapshot), generation);
+         // diff common
+         auto common_count = std::min(l_arr.size(), r_arr.size());
+         for (size_t idx = 0; idx < common_count; idx++) {
+            const auto& l_val = l_arr.at(idx);
+            const auto& r_val = r_arr.at(idx);
+            variant_diff_helper(l_val, r_val, [&](const std::string& path, const fc::variant& lhs, const fc::variant& rhs){
+               out( std::string("[") + std::to_string(idx) + std::string("]") + path, lhs, rhs);
+            });
+         }
 
-      // increment the test contract
-      chain.push_action(N(snapshot), N(increment), N(snapshot), mutable_variant_object()
-         ( "value", 1 )
-      );
+         // print lhs additions
+         for (size_t idx = common_count; idx < lhs.size(); idx++) {
+            const auto& l_val = l_arr.at(idx);
+            out( std::string("[") + std::to_string(idx) + std::string("]"), l_val, fc::variant());
+         }
 
-      // produce block
-      auto new_block = chain.produce_block();
+         // print rhs additions
+         for (size_t idx = common_count; idx < rhs.size(); idx++) {
+            const auto& r_val = r_arr.at(idx);
+            out( std::string("[") + std::to_string(idx) + std::string("]"), fc::variant(), r_val);
+         }
 
-      // undo the auto-pending from tester
-      chain.control->abort_block();
-
-      auto integrity_value = chain.control->calculate_integrity_hash();
-
-      // push that block to all sub testers and validate the integrity of the database after it.
-      for (auto& other: sub_testers) {
-         other.push_block(new_block);
-         BOOST_REQUIRE_EQUAL(integrity_value.str(), other.control->calculate_integrity_hash().str());
+      } else if (!(lhs == rhs)) {
+         out("", lhs, rhs);
       }
    }
+
+   void print_variant_diff(const fc::variant& lhs, const fc::variant& rhs) {
+      variant_diff_helper(lhs, rhs, [](const std::string& path, const fc::variant& lhs, const fc::variant& rhs){
+         std::cout << path << std::endl;
+         if (!lhs.is_null()) {
+            std::cout << " < " << fc::json::to_pretty_string(lhs) << std::endl;
+         }
+
+         if (!rhs.is_null()) {
+            std::cout << " > " << fc::json::to_pretty_string(rhs) << std::endl;
+         }
+      });
+   }
+
+   template <typename SNAPSHOT_SUITE>
+   void verify_integrity_hash(const controller& lhs, const controller& rhs) {
+      const auto lhs_integrity_hash = lhs.calculate_integrity_hash();
+      const auto rhs_integrity_hash = rhs.calculate_integrity_hash();
+      if (std::is_same_v<SNAPSHOT_SUITE, variant_snapshot_suite> && lhs_integrity_hash.str() != rhs_integrity_hash.str()) {
+         auto lhs_latest_writer = SNAPSHOT_SUITE::get_writer();
+         lhs.write_snapshot(lhs_latest_writer);
+         auto lhs_latest = SNAPSHOT_SUITE::finalize(lhs_latest_writer);
+
+         auto rhs_latest_writer = SNAPSHOT_SUITE::get_writer();
+         rhs.write_snapshot(rhs_latest_writer);
+         auto rhs_latest = SNAPSHOT_SUITE::finalize(rhs_latest_writer);
+
+         print_variant_diff(lhs_latest, rhs_latest);
+      }
+      BOOST_REQUIRE_EQUAL(lhs_integrity_hash.str(), rhs_integrity_hash.str());
+   }
 }
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(test_replay_over_snapshot, SNAPSHOT_SUITE, snapshot_suites)
-{
-   tester chain;
 
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_compatible_versions, SNAPSHOT_SUITE, snapshot_suites)
+{
+   tester chain(setup_policy::preactivate_feature_and_new_bios);
+
+   ///< Begin deterministic code to generate blockchain for comparison
+   // TODO: create a utility that will write new bin/json gzipped files based on this
    chain.create_account(N(snapshot));
    chain.produce_blocks(1);
    chain.set_code(N(snapshot), contracts::snapshot_test_wasm());
@@ -206,50 +290,39 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_replay_over_snapshot, SNAPSHOT_SUITE, snapsho
    chain.produce_blocks(1);
    chain.control->abort_block();
 
-   static const int pre_snapshot_block_count = 12;
-   static const int post_snapshot_block_count = 12;
-
-   for (int itr = 0; itr < pre_snapshot_block_count; itr++) {
-      // increment the contract
-      chain.push_action(N(snapshot), N(increment), N(snapshot), mutable_variant_object()
-         ( "value", 1 )
-      );
-
-      // produce block
-      chain.produce_block();
+   {
+     // write a temporary snapshot file
+      auto tmp_writer = SNAPSHOT_SUITE::get_writer();
+      chain.control->write_snapshot(tmp_writer);
+      auto snpsht = SNAPSHOT_SUITE::finalize(tmp_writer);
+      SNAPSHOT_SUITE::template save_tmpfile<snapshots::snap_v2>(snpsht);
    }
-
-   chain.control->abort_block();
-   auto expected_pre_integrity_hash = chain.control->calculate_integrity_hash();
-
-   // create a new snapshot child
-   auto writer = SNAPSHOT_SUITE::get_writer();
-   chain.control->write_snapshot(writer);
-   auto snapshot = SNAPSHOT_SUITE::finalize(writer);
-
-   // create a new child at this snapshot
-   snapshotted_tester snap_chain(chain.get_config(), SNAPSHOT_SUITE::get_reader(snapshot), 1);
-   BOOST_REQUIRE_EQUAL(expected_pre_integrity_hash.str(), snap_chain.control->calculate_integrity_hash().str());
-
-   // push more blocks to build up a block log
-   for (int itr = 0; itr < post_snapshot_block_count; itr++) {
-      // increment the contract
-      chain.push_action(N(snapshot), N(increment), N(snapshot), mutable_variant_object()
-         ( "value", 1 )
-      );
-
-      // produce & push block
-      snap_chain.push_block(chain.produce_block());
-   }
-
-   // verify the hash at the end
-   chain.control->abort_block();
-   auto expected_post_integrity_hash = chain.control->calculate_integrity_hash();
-   BOOST_REQUIRE_EQUAL(expected_post_integrity_hash.str(), snap_chain.control->calculate_integrity_hash().str());
-
-   // replay the block log from the snapshot child, from the snapshot
-   snapshotted_tester replay_chain(chain.get_config(), SNAPSHOT_SUITE::get_reader(snapshot), 2, 1);
-   BOOST_REQUIRE_EQUAL(expected_post_integrity_hash.str(), snap_chain.control->calculate_integrity_hash().str());
 }
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_pending_schedule_snapshot, SNAPSHOT_SUITE, snapshot_suites)
+{
+   tester chain(setup_policy::preactivate_feature_and_new_bios);
+   auto block = chain.produce_block();
+   BOOST_REQUIRE_EQUAL(block->block_num(), 3); // ensure that test setup stays consistent with original snapshot setup
+   chain.create_account(N(snapshot));
+   block = chain.produce_block();
+   BOOST_REQUIRE_EQUAL(block->block_num(), 4);
+
+   auto res = chain.set_producers( {N(snapshot)} );
+   block = chain.produce_block();
+   BOOST_REQUIRE_EQUAL(block->block_num(), 5);
+   chain.control->abort_block();
+   ///< End deterministic code to generate blockchain for comparison
+
+   {
+     // write a temporary snapshot file
+      auto tmp_writer = SNAPSHOT_SUITE::get_writer();
+      chain.control->write_snapshot(tmp_writer);
+      auto snpsht = SNAPSHOT_SUITE::finalize(tmp_writer);
+      SNAPSHOT_SUITE::template save_tmpfile<snapshots::snap_v2_prod_sched>(snpsht);
+   }
+
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

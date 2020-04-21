@@ -1,0 +1,17 @@
+#pragma once
+
+#define MAKE_READ_SNAPSHOT(NAME) \
+   struct NAME {\
+       static std::string tmpname_json()  { return std::string("${CMAKE_BINARY_DIR}/unittests/snapshots/tmp.") +  #NAME + ".json"; } \
+       static std::string tmpname_bin()  { return std::string("${CMAKE_BINARY_DIR}/unittests/snapshots/tmp.") +  #NAME + ".bin"; } \
+   };\
+
+namespace eosio {
+   namespace testing {
+      struct snapshots {
+         // v2
+         MAKE_READ_SNAPSHOT(snap_v2)
+         MAKE_READ_SNAPSHOT(snap_v2_prod_sched)
+      };
+   } /// eosio::testing
+}  /// eosio
