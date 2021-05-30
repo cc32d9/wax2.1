@@ -54,7 +54,7 @@ namespace wax {
         static std::string bytes_to_string(const char* in, size_t size) {
             std::string out;
             const char* hex = "0123456789abcdef";
-            for (int i = 0; i < size; i++) {
+            for (size_t i = 0; i < size; i++) {
                 out += hex[(in[i]>>4) & 0xF];
                 out += hex[in[i] & 0xF];
             }
