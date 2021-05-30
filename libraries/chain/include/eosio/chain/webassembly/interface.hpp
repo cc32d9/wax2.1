@@ -475,10 +475,10 @@ namespace webassembly {
           *
           * signature, exponent and modulus must be hexadecimal strings
           */
-         int32_t interface::verify_rsa_sha256_sig(array_ptr<char> message,   uint32_t message_len,
-                                                  array_ptr<char> signature, uint32_t signature_len,
-                                                  array_ptr<char> exponent,  uint32_t exponent_len,
-                                                  array_ptr<char> modulus,   uint32_t modulus_len);
+         int32_t verify_rsa_sha256_sig(legacy_span<const char> message,
+                                       legacy_span<const char> signature,
+                                       legacy_span<const char> exponent,
+                                       legacy_span<const char> modulus);
 
          /**
           * Checks if a transaction is authorized by a provided set of keys and permissions.
