@@ -60,3 +60,9 @@ EOSIO 2.0.11 merged
 ## Release `v2.0.12wax01`
 
 EOSIO 2.0.12 merged
+
+## Release `v2.1.0wax01`
+
+EOSIO 2.1.0 merged. Tests are reverted back to using system token
+precision 4, as too many tests depend on it.
+
