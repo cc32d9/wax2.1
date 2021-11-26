@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_compatible_versions, SNAPSHOT_SUITE, snapshot
    int ordinal = 0;
    for(std::string version : {"v2", "v3", "v4", "v5"})
    {
-      if(save_snapshot && version == current_version) continue;
+      if(save_snapshot && version == current_version) break;
       static_assert(chain_snapshot_header::minimum_compatible_version <= 2, "version 2 unit test is no longer needed.  Please clean up data files");
       auto old_snapshot = SNAPSHOT_SUITE::load_from_file("snap_" + version);
       BOOST_TEST_CHECKPOINT("loading snapshot: " << version);
@@ -708,5 +708,86 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(test_kv_snapshot, SNAPSHOT_SUITE, snapshot_suites)
       }
    }
 }
+
+/* 
+// This generates blocks.log with an in-flight producer schedule change
+BOOST_FIXTURE_TEST_CASE( prod_sched_generate_blocks_log, tester ) try {
+   namespace bfs = boost::filesystem;
+
+   const auto& gpo = control->get_global_properties();
+
+   create_accounts( {"alice"_n,"bob"_n,"carol"_n} );
+   while (control->head_block_num() < 3) {
+      produce_block();
+   }
+
+   // Propose a schedule of producers and 
+   // verify the producers are scheduled
+   auto res = set_producers( {"alice"_n,"bob"_n,"carol"_n} );
+   BOOST_REQUIRE_EQUAL( gpo.proposed_schedule.version, 1 );
+   BOOST_REQUIRE_EQUAL( gpo.proposed_schedule.producers.size(), 3 );
+   BOOST_REQUIRE_EQUAL( gpo.proposed_schedule.producers[0].producer_name.to_string(), "alice" );
+   BOOST_CHECK_EQUAL( control->pending_producers().version, 0u );
+
+   // Starts a new block which promotes the proposed schedule to pending
+   produce_block();
+   BOOST_CHECK_EQUAL( control->pending_producers().version, 1u );
+   BOOST_CHECK_EQUAL( control->active_producers().version, 0u );
+
+   produce_block();
+
+   // continue until all the above blocks are in the blocks.log
+   auto head_block_num = control->head_block_num();
+   while (control->last_irreversible_block_num() < head_block_num) {
+      produce_blocks(1);
+   }
+   control->abort_block();
+
+   // Save the blocks.log
+   auto source = get_config().blog.log_dir / "blocks.log";
+   auto dest = bfs::path("/tmp") / "blocks.log";
+   bfs::copy(source, dest);
+   close();
+} FC_LOG_AND_RETHROW()
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(prod_sched_generate_snapshot, SNAPSHOT_SUITE, snapshot_suites) {
+   namespace bfs = boost::filesystem;
+   auto tempdir = fc::temp_directory();
+
+   controller::config cfg;
+   cfg.blog.log_dir = tempdir.path() / config::default_blocks_dir_name;
+   cfg.state_dir  = tempdir.path() / config::default_state_dir_name;
+   bfs::create_directories(cfg.blog.log_dir);
+   bfs::copy(bfs::path("/tmp") / "blocks.log", cfg.blog.log_dir / "blocks.log");
+
+   genesis_state genesis;
+   genesis.initial_timestamp = fc::time_point::from_iso_string("2020-01-01T00:00:00.000");
+   genesis.initial_key = tester::get_public_key( config::system_account_name, "active" );
+   
+   tester base_chain(cfg, genesis);
+   auto latest_writer = SNAPSHOT_SUITE::get_writer();
+   base_chain.control->write_snapshot(latest_writer);
+   auto latest = SNAPSHOT_SUITE::finalize(latest_writer);
+
+   std::ostringstream out_str;
+   std::string ext = "";
+   if constexpr (std::is_same_v<SNAPSHOT_SUITE, variant_snapshot_suite>) {
+      auto json_str = fc::json::to_string(latest, fc::time_point::maximum());
+      out_str.write(json_str.data(), json_str.size());
+      ext = "json";
+   } else {
+      static_assert(std::is_same_v<SNAPSHOT_SUITE, buffered_snapshot_suite>, "unsupported type");
+      out_str.write(latest.data(), latest.size());
+      ext = "bin";
+   }
+
+   std::istringstream inStream(out_str.str());
+   std::ofstream file(std::string("/tmp/snap_v2_prod_sched.")+ext+".gz");
+   boost::iostreams::filtering_streambuf<boost::iostreams::input> buf_in;
+   buf_in.push(boost::iostreams::gzip_compressor());
+   buf_in.push(inStream);
+   boost::iostreams::copy(buf_in, file);
+}
+*/
 
 BOOST_AUTO_TEST_SUITE_END()
